@@ -1,13 +1,12 @@
 from disp import Display
 from utime import sleep
 
-oled = Display()
+screen = Display()
 
-oled.print("test")
-sleep(1)
-oled.print("TubaLux(tm)")
+screen.print("TubaLux(tm)")
 for i in range(0, 100):
-    oled.bar(i)
+    screen.bar(i)
     sleep(0.01)
 sleep(1)
-oled.clearbar()
+screen.clearbar()
+screen.print("init")

@@ -21,15 +21,17 @@ class Display:
 
     def print(self, text):
         self.clear()
+        self.lines[self.line] = text
+        self.line = self.line + 1
+        if (self.line > 3):
+            self.line = 0
         ln = self.line
-        self.lines[ln] = text
         for i in range(0, len(self.lines)):
-            if self.lines[i] is not None:
-                oled.text(self.lines[i], 0, i * 10)
-        ln = ln + 1
-        if (ln > 3):
-            ln = 0
-        self.line = ln
+            if self.lines[ln] is not None:
+                oled.text(self.lines[ln], 0, i * 10)
+            ln = ln + 1
+            if (ln > 3):
+                ln = 0
         oled.show()
 
     def bar(self, progress):
