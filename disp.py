@@ -9,7 +9,7 @@ oled = ssd1306.SSD1306_I2C(128, 64, i2c)
 
 class Display:
     line = 0
-    lines = [None] * 4
+    lines = [None] * 5
 
     def __init__(self):
         oled.text('Hello, world!', 0, 0)
@@ -23,14 +23,14 @@ class Display:
         self.clear()
         self.lines[self.line] = text
         self.line = self.line + 1
-        if (self.line > 3):
+        if (self.line > 4):
             self.line = 0
         ln = self.line
         for i in range(0, len(self.lines)):
             if self.lines[ln] is not None:
                 oled.text(self.lines[ln], 0, i * 10)
             ln = ln + 1
-            if (ln > 3):
+            if (ln > 4):
                 ln = 0
         oled.show()
 
