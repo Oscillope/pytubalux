@@ -14,7 +14,7 @@ for i in range(0, 100):
 sleep(1)
 screen.clearbar()
 screen.print("init")
-conffile = uio.open("config.py", 'r')
+conffile = uio.open("config", 'r')
 config = ujson.loads(conffile.read())
 conffile.close()
 screen.print("I am " + config["mode"])
