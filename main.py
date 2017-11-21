@@ -21,6 +21,11 @@ screen.print("I am " + config["mode"])
 if (config["mode"] == "leader"):
     ap = Leader(screen)
     ap.start(config["ssid"])
+    screen.softbtn(0, "Pattern")
+    screen.softbtn(1, "Speed")
+    screen.popup("Ready")
+    sleep(2)
+    screen.clearpopup()
 elif (config["mode"] == "member"):
     sta = Member(screen)
     while (sta.start(config["ssid"])):

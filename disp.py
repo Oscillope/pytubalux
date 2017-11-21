@@ -12,19 +12,23 @@ class Display:
     lines = [None] * 5
 
     def __init__(self):
-        oled.text('Hello, world!', 0, 0)
-        oled.show()
+        self.btns = ["A", "B"]
+        self.clear()
 
     def clear(self):
         oled.fill(0)
+        oled.hline(0, 51, 128, 1)
         oled.show()
 
     def print(self, text):
-        self.clear()
         self.lines[self.line] = text
         self.line = self.line + 1
         if (self.line > 4):
             self.line = 0
+        self.drawtext()
+
+    def drawtext(self):
+        self.cleartext()
         ln = self.line
         for i in range(0, len(self.lines)):
             if self.lines[ln] is not None:
@@ -33,6 +37,18 @@ class Display:
             if (ln > 4):
                 ln = 0
         oled.show()
+
+    def cleartext(self):
+        oled.fill_rect(0, 0, 128, 50, 0)
+
+    def popup(self, text):
+        oled.rect(5, 5, 118, 45, 1)
+        oled.fill_rect(6, 6, 116, 43, 0)
+        oled.text(text, 10, 25)
+        oled.show()
+
+    def clearpopup(self):
+        self.drawtext()
 
     def bar(self, progress):
         if progress == 0:
@@ -48,7 +64,15 @@ class Display:
         oled.show()
 
     def clearbar(self):
-        for i in range(4, 124):
-            for j in range(58, 63):
-                oled.pixel(i, j, 0)
+        oled.fill_rect(0, 52, 128, 11, 0)
+        oled.show()
+
+    def softbtn(self, btn, text):
+        self.clearbar()
+        if (btn == 0):
+            self.btns[0] = text
+        else:
+            self.btns[1] = text
+        oled.text(self.btns[0], 0, 54)
+        oled.text(self.btns[1], 128 - (len(text) * 8), 54)
         oled.show()
