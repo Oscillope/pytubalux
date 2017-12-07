@@ -2,6 +2,7 @@ from disp import Display
 from leader import Leader
 from member import Member
 from utime import sleep
+from encoder import encoder
 import uio
 import ujson
 
@@ -26,6 +27,13 @@ if (config["mode"] == "leader"):
     screen.popup("Ready")
     sleep(2)
     screen.clearpopup()
+    e = encoder(12, 14)
+    last = 0
+    while True:
+        value = e.getValue()
+        if value != last:
+            last = value
+            screen.popup(str(value))
 elif (config["mode"] == "member"):
     sta = Member(screen)
     while (sta.start(config["ssid"])):
