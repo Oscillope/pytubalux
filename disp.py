@@ -50,6 +50,16 @@ class Display:
     def clearpopup(self):
         self.drawtext()
 
+    def menu(self, opts, sel):
+        oled.rect(5, 5, 118, 45, 1)
+        oled.fill_rect(6, 6, 116, 43, 0)
+        oled.fill_rect(7, 13, 114, 10, 1)
+        oled.text(opts[sel], 8, 14, 0)
+        if (sel > 0):
+            oled.text(opts[sel - 1], 8, 4)
+            if (len(opts) > sel + 1):
+                oled.text(opts[sel + 1], 8, 24)
+
     def bar(self, progress):
         if progress == 0:
             self.clearbar()
