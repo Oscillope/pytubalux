@@ -1,0 +1,3 @@
+[submodule "micropython-osc"]
+	path = micropython-osc
+	url = git@github.com:SpotlightKid/micropython-osc.git
