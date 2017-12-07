@@ -39,3 +39,7 @@ elif (config["mode"] == "member"):
     while (sta.start(config["ssid"])):
         screen.print("Waiting...")
         sleep(5)
+elif (config["mode"] == "self"):
+    screen.print("Independent mode")
+    screen.softbtn(0, "Pattern")
+    screen.softbtn(1, "Speed")
