@@ -3,37 +3,37 @@ from leader import Leader
 from member import Member
 from utime import sleep
 from encoder import encoder
+from machine import Pin
 import uio
 import ujson
+import _thread
 
-screen = Display()
-
-screen.print("TubaLux(tm)")
-for i in range(0, 100):
-    screen.bar(i)
-    sleep(0.01)
-sleep(1)
-screen.clearbar()
-screen.print("init")
-conffile = uio.open("config", 'r')
-config = ujson.loads(conffile.read())
-conffile.close()
-screen.print("I am " + config["mode"])
-if (config["mode"] == "leader"):
-    ap = Leader(screen)
-    ap.start(config["ssid"])
-    screen.softbtn(0, "Pattern")
-    screen.softbtn(1, "Speed")
-    screen.popup("Ready")
-    sleep(2)
-    screen.clearpopup()
+def encoderThread(func):
     e = encoder(12, 14)
+    btn = Pin(34, Pin.IN, Pin.PULL_UP)
     last = 0
     while True:
         value = e.getValue()
         if value != last:
             last = value
-            screen.popup(str(value))
+            func(value)
+#        if (btn.value() == 1):
+#            disp.clearpopup()
+#            break
+        sleep(0.1)
+
+screen = Display()
+
+screen.print("TubaLux(tm)")
+conffile = uio.open("config", 'r')
+config = ujson.loads(conffile.read())
+conffile.close()
+screen.softbtn(0, "Pattern")
+screen.softbtn(1, "Speed")
+screen.print("I am " + config["mode"])
+if (config["mode"] == "leader"):
+    ap = Leader(screen)
+    ap.start(config["ssid"])
 elif (config["mode"] == "member"):
     sta = Member(screen)
     while (sta.start(config["ssid"])):
@@ -41,5 +41,8 @@ elif (config["mode"] == "member"):
         sleep(5)
 elif (config["mode"] == "self"):
     screen.print("Independent mode")
-    screen.softbtn(0, "Pattern")
-    screen.softbtn(1, "Speed")
+    screen.menu(["wine", "eggs", "cheese", "milk"], 0)
+    _thread.start_new_thread(encoderThread, ((lambda x: screen.menu(["wine", "eggs", "cheese", "milk"], x)),))
+
+while True:
+    sleep(1)
