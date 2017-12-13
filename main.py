@@ -3,25 +3,9 @@ from leds import Led
 from leader import Leader
 from member import Member
 from utime import sleep
-from encoder import encoder
 from machine import Pin
 import uio
 import ujson
-import _thread
-
-def encoderThread(func):
-    e = encoder(12, 14)
-    btn = Pin(34, Pin.IN, Pin.PULL_UP)
-    last = 0
-    while True:
-        value = e.getValue()
-        if value != last:
-            last = value
-            func(value)
-#        if (btn.value() == 1):
-#            disp.clearpopup()
-#            break
-        sleep(0.1)
 
 screen = Display()
 
@@ -44,4 +28,3 @@ elif (config["mode"] == "member"):
 elif (config["mode"] == "self"):
     screen.print("Independent mode")
     #screen.menu(["wine", "eggs", "cheese", "milk"], 0)
-    #_thread.start_new_thread(encoderThread, ((lambda x: screen.menu(["wine", "eggs", "cheese", "milk"], x)),))
