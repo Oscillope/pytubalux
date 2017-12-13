@@ -1,4 +1,5 @@
 from disp import Display
+from leds import Led
 from leader import Leader
 from member import Member
 from utime import sleep
@@ -31,6 +32,7 @@ conffile.close()
 screen.softbtn(0, "Pattern")
 screen.softbtn(1, "Speed")
 screen.print("I am " + config["mode"])
+leds = Led(screen, config["num_leds"], config["led_pin"])
 if (config["mode"] == "leader"):
     ap = Leader(screen)
     ap.start(config["ssid"])
@@ -41,8 +43,5 @@ elif (config["mode"] == "member"):
         sleep(5)
 elif (config["mode"] == "self"):
     screen.print("Independent mode")
-    screen.menu(["wine", "eggs", "cheese", "milk"], 0)
-    _thread.start_new_thread(encoderThread, ((lambda x: screen.menu(["wine", "eggs", "cheese", "milk"], x)),))
-
-while True:
-    sleep(1)
+    #screen.menu(["wine", "eggs", "cheese", "milk"], 0)
+    #_thread.start_new_thread(encoderThread, ((lambda x: screen.menu(["wine", "eggs", "cheese", "milk"], x)),))
