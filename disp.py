@@ -10,6 +10,8 @@ oled = ssd1306.SSD1306_I2C(128, 64, i2c)
 class Display:
     line = 0
     lines = [None] * 5
+    options = None
+    position = 0
 
     def __init__(self):
         self.btns = ["A", "B"]
@@ -51,10 +53,6 @@ class Display:
         self.drawtext()
 
     def menu(self, opts, sel):
-        if (sel < 0):
-            sel = 0
-        elif (sel >= len(opts)):
-            sel = sel % len(opts)
         oled.rect(5, 5, 118, 45, 1)
         oled.fill_rect(6, 6, 116, 43, 0)
         oled.fill_rect(7, 17, 114, 10, 1)
@@ -66,6 +64,22 @@ class Display:
         if (len(opts) > sel + 2):
             oled.text(opts[sel + 2], 8, 38)
         oled.show()
+        self.options = opts
+        self.position = sel
+
+    def movemenu(self, change):
+        if (change > 0):
+            self.position = self.position + 1
+        elif (change < 0):
+            self.position = self.position - 1
+        if (self.position < 0):
+            self.position = 0
+        elif (self.position >= len(self.options)):
+            self.position = len(self.options)
+        self.menu(self.options, self.position)
+
+    def getmenu(self):
+        return self.position
 
     def bar(self, progress):
         if progress == 0:
@@ -84,12 +98,9 @@ class Display:
         oled.fill_rect(0, 52, 128, 11, 0)
         oled.show()
 
-    def softbtn(self, btn, text):
+    def softbtn(self, btns):
         self.clearbar()
-        if (btn == 0):
-            self.btns[0] = text
-        else:
-            self.btns[1] = text
+        self.btns = btns
         oled.text(self.btns[0], 0, 54)
-        oled.text(self.btns[1], 128 - (len(text) * 8), 54)
+        oled.text(self.btns[1], 128 - (len(self.btns[1]) * 8), 54)
         oled.show()

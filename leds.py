@@ -7,3 +7,13 @@ class Led:
         self.leds = neopixel.NeoPixel(machine.Pin(pin), num)
         self.leds.fill((0, 0, 0))
         self.leds.write()
+        self.pattern_list = ["rainbow", "bounce", "cycle"]
+
+    def patterns(self):
+        return self.pattern_list
+
+    def pat_set(self, idx):
+        self.screen.print("Selected " + self.pattern_list[idx])
+
+    def tempo_set(self, tempo):
+        self.screen.print("Tempo: {:d}".format(tempo))
