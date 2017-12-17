@@ -79,7 +79,7 @@ class Display:
         self.menu(self.options, self.position)
 
     def getmenu(self):
-        return self.position
+        return self.options[self.position]
 
     def bar(self, progress):
         if progress == 0:
