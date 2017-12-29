@@ -25,24 +25,20 @@ if (prog.value() == 0):
     sys.exit()
 leds = Led(screen, config["num_leds"], config["led_pin"])
 menu_timer = machine.Timer(1)
-btn1_mode = "pattern"
-btn2_mode = "tempo"
+button_mode = "pat/tempo"
 tap_samples = []
 tap_count = 0
 
 def menu_timeout(timer):
-    global btn1_mode
-    global btn2_mode
+    global button_mode
     leds.pat_set(screen.getmenu())
     screen.drawtext()
     screen.softbtn(["Pattern", "Tempo"])
-    btn1_mode = "pattern"
-    btn2_mode = "tempo"
+    button_mode = "pat/tempo"
     leds.led_timer_start()
 
 def tap_timeout():
-    global btn1_mode
-    global btn2_mode
+    global button_mode
     global tap_samples
     avg = 0
     for samp in tap_samples:
@@ -51,32 +47,30 @@ def tap_timeout():
     screen.clearpopup()
     leds.tempo_set(int(avg * 10))
     screen.softbtn(["Pattern", "Tempo"])
-    btn1_mode = "pattern"
-    btn2_mode = "tempo"
+    button_mode = "pat/tempo"
     leds.led_timer_start()
 
-def tap_thread(sample):
+def tap_thread(timer):
     global tap_count
-    while (tap_count < 300):
+    if (tap_count < 200):
         tap_count = tap_count + 1
-        sleep(0.01)
-    tap_timeout()
+    else:
+        menu_timer.deinit()
+        tap_timeout()
 
 def softkey_up():
     screen.movemenu(-1)
-    menu_timer.init(period=3000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
+    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
 
 def softkey_down():
     screen.movemenu(1)
-    menu_timer.init(period=3000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
+    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
 
 def softkey_pattern():
-    global btn1_mode
-    global btn2_mode
+    global button_mode
     screen.menu(leds.patterns(), 0)
     screen.softbtn(["Up", "Down"])
-    btn1_mode = "up"
-    btn2_mode = "down"
+    button_mode = "up/down"
 
 def softkey_tap():
     global tap_samples
@@ -85,41 +79,41 @@ def softkey_tap():
     tap_count = 0
     tap_samples.append(sample)
     screen.popup("Tap! {:d}".format(sample))
-    #menu_timer.init(period=3000, mode=machine.Timer.ONE_SHOT, callback=tap_timeout)
 
 def softkey_tempo():
-    global btn1_mode
-    global btn2_mode
+    global button_mode
     global tap_samples
     global tap_count
     tap_count = 0
     tap_samples = []
     screen.popup("Tap!")
     screen.softbtn(["", "Tap!"])
-    btn1_mode = "none"
-    btn2_mode = "tap"
-    _thread.start_new_thread(tap_thread, (tap_samples,))
-    #menu_timer.init(period=3000, mode=machine.Timer.ONE_SHOT, callback=tap_timeout)
+    button_mode = "tap"
+    #_thread.start_new_thread(tap_thread, (tap_samples,))
+    menu_timer.init(period=10, mode=machine.Timer.PERIODIC, callback=tap_thread)
+
+def softkey_none():
+    pass
+
+button_callbacks = {
+    "pat/tempo": (softkey_pattern, softkey_tempo),
+    "up/down": (softkey_up, softkey_down),
+    "tap": (softkey_none, softkey_tap)
+}
 
 def btn1_cb():
     leds.led_timer_stop()
-    if (btn1_mode == "pattern"):
-        softkey_pattern()
-    elif (btn1_mode == "up"):
-        softkey_up()
-    else:
-        screen.print("Button1 press?")
+    try:
+        button_callbacks[button_mode][0]()
+    except KeyError:
+        screen.print("OOPS " + button_mode)
 
 def btn2_cb():
     leds.led_timer_stop()
-    if (btn2_mode == "tempo"):
-        softkey_tempo()
-    elif (btn2_mode == "down"):
-        softkey_down()
-    elif (btn2_mode == "tap"):
-        softkey_tap()
-    else:
-        screen.print("Button2 press?")
+    try:
+        button_callbacks[button_mode][1]()
+    except KeyError:
+        screen.print("OOPS " + button_mode)
 
 btns = Buttons(screen, [(12, btn1_cb), (14, btn2_cb)])
 screen.softbtn(["Pattern", "Speed"])
