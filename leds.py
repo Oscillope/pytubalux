@@ -8,6 +8,7 @@ class Led:
         self.leds = neopixel.NeoPixel(machine.Pin(pin), num)
         self.leds.fill((0, 0, 0))
         self.leds.write()
+        self.reverse = False
         self.pos = 0
         self.pattern_list = {
             "rainbow": self.pat_rainbow,
@@ -81,7 +82,7 @@ class Led:
 
     def tempo_set(self, tempo):
         self.screen.print("Tempo: {:d}".format(tempo))
-        self.period = int(tempo)
+        self.period = int(tempo/2)
         self.led_timer_start()
 
     def pat_rainbow(self, pos):
@@ -95,13 +96,15 @@ class Led:
         self.leds.write()
 
     def pat_bounce(self, pos):
-        num = self.leds.n
-        for i in range(0, num):
-            if (i == pos):
-                self.leds[i] = (255, 0, 0)
-            else:
-                self.leds[i] = (0, 0, 0)
+        if (self.reverse):
+            i = self.leds.n - pos - 1
+        else:
+            i = pos
+        self.leds[i] = (255, 0, 0)
         self.leds.write()
+        self.leds[i] = (0, 0, 0)
+        if (pos == (self.leds.n - 1)):
+            self.reverse = not self.reverse
 
     def pat_marquee(self, pos):
         num = self.leds.n
@@ -113,10 +116,15 @@ class Led:
         self.leds.write()
 
     def pat_rainbowcyl(self, pos):
-        num = self.leds.n
-        step = 255 / num
+        if (self.reverse):
+            i = self.leds.n - pos - 1
+        else:
+            i = pos
+        step = 255 / self.leds.n
         hue = (pos * step) % 255
-        self.leds[pos] = self.hsv2rgb(hue, 1, 1)
+        self.leds[i] = self.hsv2rgb(hue, 1, 1)
         self.leds.write()
-        self.leds[pos] = (0, 0, 0)
+        self.leds[i] = (0, 0, 0)
+        if (pos == (self.leds.n - 1)):
+            self.reverse = not self.reverse
 
