@@ -20,8 +20,8 @@ class Buttons:
 
     def btn_isr(self, pin):
         state = machine.disable_irq()
-        self.debounce_timer.init(period=50, mode=machine.Timer.ONE_SHOT, callback=self.debounce)
         self.debouncing = pin
+        self.debounce_timer.init(period=80, mode=machine.Timer.ONE_SHOT, callback=self.debounce)
         machine.enable_irq(state)
 
     def debounce(self, timer):

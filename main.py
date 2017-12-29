@@ -56,6 +56,7 @@ def tap_thread(timer):
         tap_count = tap_count + 1
     else:
         menu_timer.deinit()
+        tap_count = 0
         tap_timeout()
 
 def softkey_up():
@@ -79,7 +80,7 @@ def softkey_tap():
     sample = tap_count
     tap_count = 0
     tap_samples.append(sample)
-    screen.popup("Tap! {:d}".format(sample))
+    screen.popup("Tap! {:d}".format(len(tap_samples)))
 
 def softkey_tempo():
     global button_mode
