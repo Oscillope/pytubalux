@@ -71,6 +71,7 @@ def softkey_pattern():
     screen.menu(leds.patterns(), 0)
     screen.softbtn(["Up", "Down"])
     button_mode = "up/down"
+    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
 
 def softkey_tap():
     global tap_samples
