@@ -9,14 +9,19 @@ class Led:
         self.leds.fill((0, 0, 0))
         self.leds.write()
         self.pos = 0
-        self.pattern_list = {"rainbow": self.pat_rainbow, "bounce": self.pat_bounce, "marquee": self.pat_marquee}
+        self.pattern_list = {
+            "rainbow": self.pat_rainbow,
+            "cylon": self.pat_bounce,
+            "marquee": self.pat_marquee,
+            "rainbow_cyl": self.pat_rainbowcyl
+        }
         self.active = self.pat_rainbow
         self.period = int(60000/(120 * 4))
         self.timer = machine.Timer(2)
         self.led_timer_start()
 
     def led_timer_stop(self):
-        self.timer.init(period=self.period, mode=machine.Timer.ONE_SHOT, callback=self.led_timer_cb)
+        self.timer.deinit()
 
     def led_timer_start(self):
         self.timer.init(period=self.period, mode=machine.Timer.PERIODIC, callback=self.led_timer_cb)
@@ -76,7 +81,7 @@ class Led:
 
     def tempo_set(self, tempo):
         self.screen.print("Tempo: {:d}".format(tempo))
-        self.period = int(tempo/4)
+        self.period = int(tempo)
         self.led_timer_start()
 
     def pat_rainbow(self, pos):
@@ -100,9 +105,18 @@ class Led:
 
     def pat_marquee(self, pos):
         num = self.leds.n
-        for i in range(0 , num):
+        for i in range(0, num):
             if ((i + pos) % 4 == 0):
                 self.leds[i] = (255, 120, 0)
             else:
                 self.leds[i] = (0, 0, 0)
         self.leds.write()
+
+    def pat_rainbowcyl(self, pos):
+        num = self.leds.n
+        step = 255 / num
+        hue = (pos * step) % 255
+        self.leds[pos] = self.hsv2rgb(hue, 1, 1)
+        self.leds.write()
+        self.leds[pos] = (0, 0, 0)
+
