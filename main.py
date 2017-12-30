@@ -112,6 +112,7 @@ def softkey_color():
     global last_mode
     last_mode = button_mode
     screen.menu(["red", "orange", "yellow", "green", "blue", "indigo", "violet"], 0)
+    screen.softbtn(["Up", "Down"])
     button_mode = "up/down"
     menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
 
@@ -120,6 +121,7 @@ def softkey_intens():
     global last_mode
     last_mode = "intens"
     screen.menu(["10", "20", "50", "100"], 3)
+    screen.softbtn(["Up", "Down"])
     button_mode = "up/down"
     menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
 
