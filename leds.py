@@ -19,12 +19,12 @@ class Led:
         self.color = 0
         self.color_list = {
             "red": 0,
-            "orange": (30 / 360) * 255,
-            "yellow": (50 / 360) * 255,
-            "green": (120 / 360) * 255,
-            "blue": (240 / 360) * 255,
-            "indigo": (260 / 360) * 255,
-            "violet": (280 / 360) * 255
+            "orange": 30,
+            "yellow": 50,
+            "green": 120,
+            "blue": 240,
+            "indigo": 260,
+            "violet": 280
         }
         self.intens = 1.0
         self.active = self.pat_rainbow
@@ -106,9 +106,9 @@ class Led:
 
     def pat_rainbow(self, pos):
         num = self.leds.n
-        step = 255 / num
+        step = 360 / num
         for i in range(0, num):
-            hue = ((i + pos) * step) % 255
+            hue = ((i + pos) * step) % 360
             rgb = self.hsv2rgb(hue, 1, 0.2)
             #print("hue {:f} pos {:d} rgb ".format(hue, self.pos) + str(rgb))
             self.leds[i] = rgb
@@ -143,8 +143,8 @@ class Led:
             i = self.leds.n - pos - 1
         else:
             i = pos
-        step = 255 / self.leds.n
-        hue = (pos * step) % 255
+        step = 360 / self.leds.n
+        hue = (pos * step) % 360
         self.leds[i] = self.hsv2rgb(hue, 1, self.intens)
         self.leds.write()
         self.leds[i] = (0, 0, 0)
