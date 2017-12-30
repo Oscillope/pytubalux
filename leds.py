@@ -15,7 +15,8 @@ class Led:
             "cylon": self.pat_bounce,
             "rainbow cylon": self.pat_rainbowcyl,
             "marquee": self.pat_marquee,
-            "solid": self.pat_solid
+            "solid": self.pat_solid,
+            "pulse": self.pat_pulse
         }
         self.color = 0
         self.color_list = {
@@ -156,4 +157,17 @@ class Led:
         self.leds.fill(self.hsv2rgb(self.color, 1, self.intens))
         self.leds.write()
         self.led_timer_stop()
+
+    def pat_pulse(self, pos):
+        if (pos == 0):
+            self.reverse = (self.reverse + 1) % 2
+        self.leds.fill(self.hsv2rgb(self.color, 1, self.intens))
+        if (not self.reverse):
+            for i in range(pos - 9, pos):
+                if (i >= 0):
+                    self.leds[i] = self.hsv2rgb(self.color, 1, self.intens - (self.intens / (2 ** (i - pos))))
+        elif (pos < 8):
+            for i in range(1, 9 - pos):
+                self.leds[self.leds.n - i] = self.hsv2rgb(self.color, 1, self.intens / (2 ** (9 - (i + pos))))
+        self.leds.write()
 
