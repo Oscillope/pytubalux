@@ -14,7 +14,8 @@ class Led:
             "rainbow": self.pat_rainbow,
             "cylon": self.pat_bounce,
             "rainbow cylon": self.pat_rainbowcyl,
-            "marquee": self.pat_marquee
+            "marquee": self.pat_marquee,
+            "solid": self.pat_solid
         }
         self.color = 0
         self.color_list = {
@@ -150,4 +151,9 @@ class Led:
         self.leds[i] = (0, 0, 0)
         if (pos == (self.leds.n - 1)):
             self.reverse = not self.reverse
+
+    def pat_solid(self, pos):
+        self.leds.fill(self.hsv2rgb(self.color, 1, self.intens))
+        self.leds.write()
+        self.led_timer_stop()
 
