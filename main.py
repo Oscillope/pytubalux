@@ -26,13 +26,24 @@ if (prog.value() == 0):
 leds = Led(screen, config["num_leds"], config["led_pin"])
 menu_timer = machine.Timer(1)
 button_mode = "pat/tempo"
+last_mode = "pat/tempo"
 tap_samples = []
 tap_count = 0
 
 def menu_timeout(timer):
     global button_mode
-    leds.pat_set(screen.getmenu())
     screen.drawtext()
+    if (prog.value() == 0):
+        screen.print("color mode")
+        screen.softbtn(["Color", "Intens."])
+        button_mode = "color"
+        return
+    if (last_mode == "pat/tempo"):
+        leds.pat_set(screen.getmenu())
+    elif (last_mode == "color"):
+        leds.color_set(screen.getmenu())
+    elif (last_mode == "intens"):
+        leds.intens_set(screen.getmenu())
     screen.softbtn(["Pattern", "Tempo"])
     button_mode = "pat/tempo"
     leds.led_timer_start()
@@ -69,6 +80,8 @@ def softkey_down():
 
 def softkey_pattern():
     global button_mode
+    global last_mode
+    last_mode = button_mode
     screen.menu(leds.patterns(), 0)
     screen.softbtn(["Up", "Down"])
     button_mode = "up/down"
@@ -94,13 +107,30 @@ def softkey_tempo():
     #_thread.start_new_thread(tap_thread, (tap_samples,))
     menu_timer.init(period=10, mode=machine.Timer.PERIODIC, callback=tap_thread)
 
+def softkey_color():
+    global button_mode
+    global last_mode
+    last_mode = button_mode
+    screen.menu(["red", "orange", "yellow", "green", "blue", "indigo", "violet"], 0)
+    button_mode = "up/down"
+    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
+
+def softkey_intens():
+    global button_mode
+    global last_mode
+    last_mode = "intens"
+    screen.menu(["10", "20", "50", "100"], 3)
+    button_mode = "up/down"
+    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
+
 def softkey_none():
     pass
 
 button_callbacks = {
     "pat/tempo": (softkey_pattern, softkey_tempo),
     "up/down": (softkey_up, softkey_down),
-    "tap": (softkey_none, softkey_tap)
+    "tap": (softkey_none, softkey_tap),
+    "color": (softkey_color, softkey_intens)
 }
 
 def btn1_cb():

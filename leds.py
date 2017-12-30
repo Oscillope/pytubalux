@@ -13,9 +13,20 @@ class Led:
         self.pattern_list = {
             "rainbow": self.pat_rainbow,
             "cylon": self.pat_bounce,
-            "marquee": self.pat_marquee,
-            "rainbow_cyl": self.pat_rainbowcyl
+            "rainbow cylon": self.pat_rainbowcyl,
+            "marquee": self.pat_marquee
         }
+        self.color = 0
+        self.color_list = {
+            "red": 0,
+            "orange": (30 / 360) * 255,
+            "yellow": (50 / 360) * 255,
+            "green": (120 / 360) * 255,
+            "blue": (240 / 360) * 255,
+            "indigo": (260 / 360) * 255,
+            "violet": (280 / 360) * 255
+        }
+        self.intens = 1.0
         self.active = self.pat_rainbow
         self.period = int(60000/(120 * 4))
         self.timer = machine.Timer(2)
@@ -85,6 +96,14 @@ class Led:
         self.period = int(tempo/2)
         self.led_timer_start()
 
+    def color_set(self, color):
+        self.screen.print("Color " + color + " " + str(self.color_list[color]))
+        self.color = self.color_list[color]
+
+    def intens_set(self, intens):
+        self.screen.print("Intens " + intens)
+        self.intens = float(intens)/100.0
+
     def pat_rainbow(self, pos):
         num = self.leds.n
         step = 255 / num
@@ -100,7 +119,7 @@ class Led:
             i = self.leds.n - pos - 1
         else:
             i = pos
-        self.leds[i] = (255, 0, 0)
+        self.leds[i] = self.hsv2rgb(self.color, 1, self.intens)
         self.leds.write()
         self.leds[i] = (0, 0, 0)
         if (pos == (self.leds.n - 1)):
@@ -108,9 +127,13 @@ class Led:
 
     def pat_marquee(self, pos):
         num = self.leds.n
+        if (self.color == 0):
+            color = self.color_list["orange"]
+        else:
+            color = self.color
         for i in range(0, num):
             if ((i + pos) % 4 == 0):
-                self.leds[i] = (255, 120, 0)
+                self.leds[i] = self.hsv2rgb(color, 1, self.intens)
             else:
                 self.leds[i] = (0, 0, 0)
         self.leds.write()
@@ -122,7 +145,7 @@ class Led:
             i = pos
         step = 255 / self.leds.n
         hue = (pos * step) % 255
-        self.leds[i] = self.hsv2rgb(hue, 1, 1)
+        self.leds[i] = self.hsv2rgb(hue, 1, self.intens)
         self.leds.write()
         self.leds[i] = (0, 0, 0)
         if (pos == (self.leds.n - 1)):
