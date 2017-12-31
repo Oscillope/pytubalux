@@ -160,12 +160,14 @@ class Led:
 
     def pat_pulse(self, pos):
         if (pos == 0):
-            self.reverse = (self.reverse + 1) % 2
+            self.reverse = not self.reverse
         self.leds.fill(self.hsv2rgb(self.color, 1, self.intens))
         if (not self.reverse):
-            for i in range(pos - 9, pos):
+            for i in range(pos - 8, pos):
                 if (i >= 0):
-                    self.leds[i] = self.hsv2rgb(self.color, 1, self.intens - (self.intens / (2 ** (i - pos))))
+                    self.leds[i] = self.hsv2rgb(self.color, 1, self.intens / (2 ** (9 - (pos - i))))
+                    print("i {:d} pos {:d} intens {:f}".format(i, pos, (self.intens / (2 ** (9 - (pos - i))))))
+            self.leds[pos] = (0, 0, 0)
         elif (pos < 8):
             for i in range(1, 9 - pos):
                 self.leds[self.leds.n - i] = self.hsv2rgb(self.color, 1, self.intens / (2 ** (9 - (i + pos))))
