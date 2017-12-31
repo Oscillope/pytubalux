@@ -1,3 +1,4 @@
 [submodule "micropython-osc"]
 	path = micropython-osc
 	url = git@github.com:Oscillope/micropython-osc.git
+	branch = master
