@@ -120,7 +120,7 @@ def softkey_intens():
     global button_mode
     global last_mode
     last_mode = "intens"
-    screen.menu(["10", "20", "50", "100"], 3)
+    screen.menu(["100", "50", "20", "10"], 0)
     screen.softbtn(["Up", "Down"])
     button_mode = "up/down"
     menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
