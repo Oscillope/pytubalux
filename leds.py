@@ -1,4 +1,5 @@
 import machine, neopixel, math
+from utime import sleep
 import _thread
 
 class Led:
@@ -28,21 +29,25 @@ class Led:
             "indigo": 260,
             "violet": 280
         }
-        self.intens = 1.0
+        self.intens = 0.2   # 0-1, float
         self.active = self.pat_rainbow
-        self.period = int(60000/(120 * 4))
-        self.timer = machine.Timer(2)
-        self.led_timer_start()
+        self.period = 20    # 10ths of a second
+        self.stop_thread = False
+        _thread.start_new_thread(self.led_timer_thread, (None,))
+
+    def led_timer_thread(self, unused):
+        while (not self.stop_thread):
+            self.pos = (self.pos + 1) % self.leds.n
+            self.active(self.pos)
+            sleep(self.period / 100)
 
     def led_timer_stop(self):
-        self.timer.deinit()
+        self.stop_thread = True
 
     def led_timer_start(self):
-        self.timer.init(period=self.period, mode=machine.Timer.PERIODIC, callback=self.led_timer_cb)
-
-    def led_timer_cb(self, timer):
-        self.pos = (self.pos + 1) % self.leds.n
-        _thread.start_new_thread(self.active, (self.pos, ))
+        if (self.stop_thread):
+            self.stop_thread = False
+            _thread.start_new_thread(self.led_timer_thread, (None,))
 
     # RGB/HSV stuff from http://code.activestate.com/recipes/576919-python-rgb-and-hsv-conversion/
     def hsv2rgb(self, h, s, v):
@@ -115,7 +120,7 @@ class Led:
         step = 360 / num
         for i in range(0, num):
             hue = ((i + pos) * step) % 360
-            rgb = self.hsv2rgb(hue, 1, 0.2)
+            rgb = self.hsv2rgb(hue, 1, self.intens)
             #print("hue {:f} pos {:d} rgb ".format(hue, self.pos) + str(rgb))
             self.leds[i] = rgb
         self.leds.write()
