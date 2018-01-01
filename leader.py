@@ -26,15 +26,17 @@ class Leader:
                 print("set pattern " + str(pat))
                 self.leds.pat_set(self.leds.patterns()[pat])
                 if (self.clients[srcaddr]):
-                    self.clients[srcaddr].send("/tubalux/status/pattern", self.leds.patterns()[pat])
+                    self.clients[srcaddr].send("/tubalux/pattern", pat + 1)
             for client in self.clients:
                 client.send(msg)
         elif ("ping" in addr):
             if (srcaddr not in list(self.clients.keys())):
-                print("client " + str(src) + " wants to register")
+                self.screen.print("sta " + srcaddr)
                 self.clients[srcaddr] = uosc.client.Client(srcaddr, 9009)
             for i, pattern in enumerate(self.leds.patterns()):
-                self.clients[srcaddr].send("/tubalux/status/pattern/{:d}".format(i), pattern)
+                self.clients[srcaddr].send("/tubalux/patterns/{:d}".format(i), pattern)
+            self.clients[srcaddr].send("/tubalux/intens", self.leds.intens_get())
+            self.clients[srcaddr].send("/tubalux/color", self.leds.hue_get() / 360)
 
     def start(self, ssid):
         self.ap_if.active(True)

@@ -111,9 +111,14 @@ class Led:
     def hue_set(self, hue):
         self.color = hue
 
+    def hue_get(self):
+        return self.color
+
     def intens_set(self, intens):
-        self.screen.print("Intens " + str(intens))
         self.intens = float(intens)/100.0
+
+    def intens_get(self):
+        return self.intens
 
     def pat_rainbow(self, pos):
         num = self.leds.n
