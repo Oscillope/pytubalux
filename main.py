@@ -153,8 +153,8 @@ btns = Buttons(screen, [(12, btn1_cb), (14, btn2_cb)])
 screen.softbtn(["Pattern", "Speed"])
 screen.print("I am " + config["mode"])
 if (config["mode"] == "leader"):
-    ap = Leader(screen)
-    ap.start(config["ssid"])
+    ap = Leader(screen, leds)
+    _thread.start_new_thread(ap.start, (config["ssid"],))
 elif (config["mode"] == "member"):
     sta = Member(screen)
     while (sta.start(config["ssid"])):

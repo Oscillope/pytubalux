@@ -92,6 +92,7 @@ class Led:
     def pat_set(self, name):
         self.screen.print("Selected " + name)
         self.active = self.pattern_list[name]
+        self.led_timer_start()
 
     def tempo_set(self, tempo):
         self.screen.print("Tempo: {:d}".format(tempo))
@@ -102,8 +103,11 @@ class Led:
         self.screen.print("Color " + color + " " + str(self.color_list[color]))
         self.color = self.color_list[color]
 
+    def hue_set(self, hue):
+        self.color = hue
+
     def intens_set(self, intens):
-        self.screen.print("Intens " + intens)
+        self.screen.print("Intens " + str(intens))
         self.intens = float(intens)/100.0
 
     def pat_rainbow(self, pos):
@@ -166,7 +170,6 @@ class Led:
             for i in range(pos - 8, pos):
                 if (i >= 0):
                     self.leds[i] = self.hsv2rgb(self.color, 1, self.intens / (2 ** (9 - (pos - i))))
-                    print("i {:d} pos {:d} intens {:f}".format(i, pos, (self.intens / (2 ** (9 - (pos - i))))))
             self.leds[pos] = (0, 0, 0)
         elif (pos < 8):
             for i in range(1, 9 - pos):
