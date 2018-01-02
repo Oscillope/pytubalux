@@ -33,10 +33,5 @@ for FILE in `ls uosc/*.py`; do
 	fi
 done
 
-if [ -f "config" ]; then
-	ampy --port $1 put config
-else
-	echo "No config found, hopefully you know what you're doing."
-fi
 ampy --port $1 reset
-echo "Put config, rebooting..."
+echo "Rebooting..."
