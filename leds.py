@@ -110,12 +110,14 @@ class Led:
 
     def hue_set(self, hue):
         self.color = hue
+        self.led_timer_start()
 
     def hue_get(self):
         return self.color
 
     def intens_set(self, intens):
         self.intens = float(intens)/100.0
+        self.led_timer_start()
 
     def intens_get(self):
         return self.intens
