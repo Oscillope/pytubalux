@@ -18,9 +18,9 @@ class Leader:
         if ("tubalux" in addr):
             value = ctrls[0]
             if ("color" in addr):
-                self.leds.hue_set(value * 360)
+                self.leds.hue = value * 360
             elif ("intens" in addr):
-                self.leds.intens_set(value * 100)
+                self.leds.intens = value
             elif ("pattern" in addr):
                 pat = int(value)
                 print("set pattern " + str(pat))
@@ -35,8 +35,8 @@ class Leader:
                 self.clients[srcaddr] = uosc.client.Client(srcaddr, 9009)
             for i, pattern in enumerate(self.leds.patterns()):
                 self.clients[srcaddr].send("/tubalux/patterns/{:d}".format(i), pattern)
-            self.clients[srcaddr].send("/tubalux/intens", self.leds.intens_get())
-            self.clients[srcaddr].send("/tubalux/color", self.leds.hue_get() / 360)
+            self.clients[srcaddr].send("/tubalux/intens", self.leds.intens)
+            self.clients[srcaddr].send("/tubalux/color", self.leds.hue / 360)
 
     def start(self, ssid):
         self.ap_if.active(True)

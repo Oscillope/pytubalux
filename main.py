@@ -41,9 +41,9 @@ def menu_timeout(timer):
     if (last_mode == "pat/tempo"):
         leds.pat_set(screen.getmenu())
     elif (last_mode == "color"):
-        leds.color_set(screen.getmenu())
+        leds.hue = leds.color_list[screen.getmenu()]
     elif (last_mode == "intens"):
-        leds.intens_set(screen.getmenu())
+        leds.intens = float(screen.getmenu()) / 100
     screen.softbtn(["Pattern", "Tempo"])
     button_mode = "pat/tempo"
 
@@ -111,7 +111,7 @@ def softkey_color():
     global button_mode
     global last_mode
     last_mode = button_mode
-    screen.menu(["red", "orange", "yellow", "green", "blue", "indigo", "violet"], 0)
+    screen.menu(list(leds.color_list.keys()), 0)
     screen.softbtn(["Up", "Down"])
     button_mode = "up/down"
     menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)

@@ -19,7 +19,7 @@ class Led:
             "solid": self.pat_solid,
             "pulse": self.pat_pulse
         }
-        self.color = 0
+        self.hue = 0
         self.color_list = {
             "red": 0,
             "orange": 30,
@@ -104,24 +104,6 @@ class Led:
         self.period = int(tempo/2)
         self.led_timer_start()
 
-    def color_set(self, color):
-        self.screen.print("Color " + color + " " + str(self.color_list[color]))
-        self.color = self.color_list[color]
-
-    def hue_set(self, hue):
-        self.color = hue
-        self.led_timer_start()
-
-    def hue_get(self):
-        return self.color
-
-    def intens_set(self, intens):
-        self.intens = float(intens)/100.0
-        self.led_timer_start()
-
-    def intens_get(self):
-        return self.intens
-
     def pat_rainbow(self, pos):
         num = self.leds.n
         step = 360 / num
@@ -137,7 +119,7 @@ class Led:
             i = self.leds.n - pos - 1
         else:
             i = pos
-        self.leds[i] = self.hsv2rgb(self.color, 1, self.intens)
+        self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
         self.leds.write()
         self.leds[i] = (0, 0, 0)
         if (pos == (self.leds.n - 1)):
@@ -145,10 +127,10 @@ class Led:
 
     def pat_marquee(self, pos):
         num = self.leds.n
-        if (self.color == 0):
+        if (self.hue == 0):
             color = self.color_list["orange"]
         else:
-            color = self.color
+            color = self.hue
         for i in range(0, num):
             if ((i + pos) % 4 == 0):
                 self.leds[i] = self.hsv2rgb(color, 1, self.intens)
@@ -170,21 +152,21 @@ class Led:
             self.reverse = not self.reverse
 
     def pat_solid(self, pos):
-        self.leds.fill(self.hsv2rgb(self.color, 1, self.intens))
+        self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
         self.leds.write()
         self.led_timer_stop()
 
     def pat_pulse(self, pos):
         if (pos == 0):
             self.reverse = not self.reverse
-        self.leds.fill(self.hsv2rgb(self.color, 1, self.intens))
+        self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
         if (not self.reverse):
             for i in range(pos - 8, pos):
                 if (i >= 0):
-                    self.leds[i] = self.hsv2rgb(self.color, 1, self.intens / (2 ** (9 - (pos - i))))
+                    self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (pos - i))))
             self.leds[pos] = (0, 0, 0)
         elif (pos < 8):
             for i in range(1, 9 - pos):
-                self.leds[self.leds.n - i] = self.hsv2rgb(self.color, 1, self.intens / (2 ** (9 - (i + pos))))
+                self.leds[self.leds.n - i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (i + pos))))
         self.leds.write()
 
