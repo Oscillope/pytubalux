@@ -39,11 +39,11 @@ def menu_timeout(timer):
         button_mode = "color"
         return
     if (last_mode == "pat/tempo"):
-        leds.pat_set(screen.getmenu())
+        leds.active_pat = screen.menu_str
     elif (last_mode == "color"):
-        leds.hue = leds.color_list[screen.getmenu()]
+        leds.color_str = screen.menu_str
     elif (last_mode == "intens"):
-        leds.intens = float(screen.getmenu()) / 100
+        leds.intens = float(screen.menu_str) / 100
     screen.softbtn(["Pattern", "Tempo"])
     button_mode = "pat/tempo"
 
@@ -70,18 +70,24 @@ def tap_thread(timer):
         tap_timeout()
 
 def softkey_up():
-    screen.movemenu(-1)
+    try:
+        screen.menu_pos -= 1
+    except ValueError:
+        pass
     menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
 
 def softkey_down():
-    screen.movemenu(1)
+    try:
+        screen.menu_pos += 1
+    except ValueError:
+        pass
     menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
 
 def softkey_pattern():
     global button_mode
     global last_mode
     last_mode = button_mode
-    screen.menu(leds.patterns(), 0)
+    screen.menu(leds.patterns, 0)
     screen.softbtn(["Up", "Down"])
     button_mode = "up/down"
     menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
@@ -111,7 +117,7 @@ def softkey_color():
     global button_mode
     global last_mode
     last_mode = button_mode
-    screen.menu(list(leds.color_list.keys()), 0)
+    screen.menu(leds.colors, 0)
     screen.softbtn(["Up", "Down"])
     button_mode = "up/down"
     menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)

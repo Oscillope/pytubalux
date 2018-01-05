@@ -10,11 +10,11 @@ oled = ssd1306.SSD1306_I2C(128, 64, i2c)
 class Display:
     line = 0
     lines = [None] * 5
-    options = None
-    position = 0
 
     def __init__(self):
         self.btns = ["A", "B"]
+        self._menu_pos = 0
+        self._options = None
         self.clear()
 
     def clear(self):
@@ -64,22 +64,26 @@ class Display:
         if (len(opts) > sel + 2):
             oled.text(opts[sel + 2], 8, 38)
         oled.show()
-        self.options = opts
-        self.position = sel
+        self._options = opts
+        self._menu_pos = sel
 
-    def movemenu(self, change):
-        if (change > 0):
-            self.position = self.position + 1
-        elif (change < 0):
-            self.position = self.position - 1
-        if (self.position < 0):
-            self.position = 0
-        elif (self.position >= len(self.options)):
-            self.position = len(self.options)
-        self.menu(self.options, self.position)
+    @property
+    def menu_str(self):
+        return self._options[self._menu_pos]
 
-    def getmenu(self):
-        return self.options[self.position]
+    @property
+    def menu_pos(self):
+        return self._menu_pos
+
+    @menu_pos.setter
+    def menu_pos(self, value):
+        if (value < 0):
+            raise ValueError("Menu item out of range (-)")
+        elif (value >= len(self._options)):
+            raise ValueError("Menu item out of range (+)")
+        else:
+            self._menu_pos = value
+            self.menu(self._options, self._menu_pos)
 
     def bar(self, progress):
         if progress == 0:

@@ -1,4 +1,5 @@
 import machine, neopixel, math
+from ucollections import OrderedDict
 from utime import sleep
 import _thread
 
@@ -11,7 +12,7 @@ class Led:
         self.leds.write()
         self.reverse = False
         self.pos = 0
-        self.pattern_list = {
+        self._patterns = {
             "rainbow": self.pat_rainbow,
             "cylon": self.pat_bounce,
             "rainbow cylon": self.pat_rainbowcyl,
@@ -20,17 +21,17 @@ class Led:
             "pulse": self.pat_pulse
         }
         self.hue = 0
-        self.color_list = {
-            "red": 0,
-            "orange": 30,
-            "yellow": 50,
-            "green": 120,
-            "blue": 240,
-            "indigo": 260,
-            "violet": 280
-        }
+        self._colors = OrderedDict([
+            ("red", 0),
+            ("orange", 30),
+            ("yellow", 50),
+            ("green", 120),
+            ("blue", 240),
+            ("indigo", 260),
+            ("violet", 280)
+        ])
         self.intens = 0.2   # 0-1, float
-        self.active = self.pat_rainbow
+        self._active = self.pat_rainbow
         self.period = 20    # 10ths of a second
         self.stop_thread = False
         _thread.start_new_thread(self.led_timer_thread, (None,))
@@ -38,7 +39,7 @@ class Led:
     def led_timer_thread(self, unused):
         while (not self.stop_thread):
             self.pos = (self.pos + 1) % self.leds.n
-            self.active(self.pos)
+            self._active(self.pos)
             sleep(self.period / 100)
 
     def led_timer_stop(self):
@@ -91,12 +92,33 @@ class Led:
         v = mx
         return h, s, v
 
+    @property
     def patterns(self):
-        return list(self.pattern_list.keys())
+        return list(self._patterns.keys())
 
-    def pat_set(self, name):
+    @property
+    def colors(self):
+        return list(self._colors.keys())
+
+    @property
+    def color_str(self):
+        try:
+            return (key for key, value in self._colors.items()).next()
+        except StopIteration:
+            return "red"
+
+    @color_str.setter
+    def color_str(self, name):
+        self.hue = self._colors[name]
+
+    @property
+    def active_pat(self):
+        return self._active
+
+    @active_pat.setter
+    def active_pat(self, name):
         self.screen.print("Selected " + name)
-        self.active = self.pattern_list[name]
+        self._active = self._patterns[name]
         self.led_timer_start()
 
     def tempo_set(self, tempo):
@@ -127,13 +149,9 @@ class Led:
 
     def pat_marquee(self, pos):
         num = self.leds.n
-        if (self.hue == 0):
-            color = self.color_list["orange"]
-        else:
-            color = self.hue
         for i in range(0, num):
             if ((i + pos) % 4 == 0):
-                self.leds[i] = self.hsv2rgb(color, 1, self.intens)
+                self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
             else:
                 self.leds[i] = (0, 0, 0)
         self.leds.write()
