@@ -46,7 +46,6 @@ def menu_timeout(timer):
         leds.intens_set(screen.getmenu())
     screen.softbtn(["Pattern", "Tempo"])
     button_mode = "pat/tempo"
-    leds.led_timer_start()
 
 def tap_timeout():
     global button_mode
@@ -90,6 +89,7 @@ def softkey_pattern():
 def softkey_tap():
     global tap_samples
     global tap_count
+    leds.led_timer_stop()
     sample = tap_count
     tap_count = 0
     tap_samples.append(sample)
@@ -136,14 +136,12 @@ button_callbacks = {
 }
 
 def btn1_cb():
-    leds.led_timer_stop()
     try:
         button_callbacks[button_mode][0]()
     except KeyError:
         screen.print("OOPS " + button_mode)
 
 def btn2_cb():
-    leds.led_timer_stop()
     try:
         button_callbacks[button_mode][1]()
     except KeyError:
