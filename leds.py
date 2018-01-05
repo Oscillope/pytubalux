@@ -103,7 +103,7 @@ class Led:
     @property
     def color_str(self):
         try:
-            return (key for key, value in self._colors.items()).next()
+            return next(key for key, self.hue in self._colors.items())
         except StopIteration:
             return "red"
 
@@ -113,7 +113,10 @@ class Led:
 
     @property
     def active_pat(self):
-        return self._active
+        try:
+            return next(key for key, self._active in self._patterns.items())
+        except StopIteration:
+            raise ValueError
 
     @active_pat.setter
     def active_pat(self, name):
@@ -121,7 +124,12 @@ class Led:
         self._active = self._patterns[name]
         self.led_timer_start()
 
-    def tempo_set(self, tempo):
+    @property
+    def tempo(self):
+        return self.period
+
+    @tempo.setter
+    def tempo(self, tempo):
         self.screen.print("Tempo: {:d}".format(tempo))
         self.period = int(tempo/2)
         self.led_timer_start()

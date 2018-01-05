@@ -55,7 +55,7 @@ def tap_timeout():
         avg = avg + samp
     avg = avg / len(tap_samples)
     screen.clearpopup()
-    leds.tempo_set(int(avg))
+    leds.tempo = int(avg)
     screen.softbtn(["Pattern", "Tempo"])
     button_mode = "pat/tempo"
     leds.led_timer_start()

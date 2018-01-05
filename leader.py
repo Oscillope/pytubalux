@@ -24,7 +24,7 @@ class Leader:
             elif ("pattern" in addr):
                 pat = int(value)
                 print("set pattern " + str(pat))
-                self.leds.pat_set(self.leds.patterns()[pat])
+                self.leds.active_pat = self.leds.patterns[pat]
                 if (self.clients[srcaddr]):
                     self.clients[srcaddr].send("/tubalux/pattern", pat + 1)
             for client in self.clients:
@@ -33,7 +33,7 @@ class Leader:
             if (srcaddr not in list(self.clients.keys())):
                 self.screen.print("sta " + srcaddr)
                 self.clients[srcaddr] = uosc.client.Client(srcaddr, 9009)
-            for i, pattern in enumerate(self.leds.patterns()):
+            for i, pattern in enumerate(self.leds.patterns):
                 self.clients[srcaddr].send("/tubalux/patterns/{:d}".format(i), pattern)
             self.clients[srcaddr].send("/tubalux/intens", self.leds.intens)
             self.clients[srcaddr].send("/tubalux/color", self.leds.hue / 360)
