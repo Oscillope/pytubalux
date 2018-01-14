@@ -12,19 +12,19 @@ class Led:
         self.leds.write()
         self.reverse = False
         self.pos = 0
-        self._patterns = {
-            "rainbow": self.pat_rainbow,
-            "cylon": self.pat_bounce,
-            "rainbow cylon": self.pat_rainbowcyl,
-            "marquee": self.pat_marquee,
-            "solid": self.pat_solid,
-            "pulse": self.pat_pulse
-        }
+        self._patterns = OrderedDict([
+            ("rainbow", self.pat_rainbow),
+            ("cylon", self.pat_bounce),
+            ("rainbow cylon", self.pat_rainbowcyl),
+            ("marquee", self.pat_marquee),
+            ("solid", self.pat_solid),
+            ("pulse", self.pat_pulse)
+        ])
         if (rings):
-            ring_pats = {
-                "r_radar": self.pat_radar,
-                "r_tunnel": self.pat_tunnel,
-            }
+            ring_pats = OrderedDict([
+                ("r_radar", self.pat_radar),
+                ("r_tunnel", self.pat_tunnel)
+            ])
             self.rings = rings
             self._patterns.update(ring_pats)
         else:
