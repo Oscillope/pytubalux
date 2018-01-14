@@ -1,0 +1,5 @@
+{"mode": "leader",
+ "ssid": "example",
+ "num_leds": 25,
+ "led_pin": 17
+}

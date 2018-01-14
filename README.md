@@ -11,4 +11,5 @@ This is the board. It can be purchased from [AliExpress](https://www.aliexpress.
 I picked MicroPython for this because it's pretty widely-supported, looked like fun, and my Python skills could use a brush-up. You can get the latest binary from [the MicroPython site](https://micropython.org/download/#esp32). To flash MicroPython, you can almost follow the instructions for [the ESP8266](https://docs.micropython.org/en/latest/esp8266/esp8266/tutorial/intro.html), **HOWEVER** it's important to note that you need to change the starting address from 0 to 0x1000. You can see the syntax for this in esptool on the MicroPython downloads page. Most of the documentation for [the ESP8266](https://docs.micropython.org/en/latest/esp8266/index.html) will also work on the ESP32, though there isn't an official documentation.
 
 ## The Scripts
-TODO: Document here the config file syntax, OSC syntax, and general project structure
+There should be a file called `config` in the root directory of your MicroPython installation. It lists, in JSON format, the number of LEDs, controller mode, LED pin, and ESSID. See [config.example](https://github.com/Oscillope/tubalux/blob/master/config.example) for, well, an example...
+TODO: Document here the OSC syntax, and general project structure
