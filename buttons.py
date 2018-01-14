@@ -4,8 +4,7 @@ import _thread
 micropython.alloc_emergency_exception_buf(100)
 
 class Buttons:
-    def __init__(self, scr, btn_list):
-        self.screen = scr
+    def __init__(self, btn_list):
         self.debounce_timer = machine.Timer(0)
         self.debounce_done = False
         self.debouncing = None

@@ -19,7 +19,7 @@ screen = Display()
 screen.print("TubaLux(tm)")
 prog = machine.Pin(12, machine.Pin.IN, machine.Pin.PULL_UP)
 if (prog.value() == 0):
-    screen.print("Programming mode")
+    screen.print("Configuration mode")
     sleep(1)
     import sys
     sys.exit()
@@ -157,7 +157,7 @@ def btn2_cb():
     except KeyError:
         screen.print("OOPS " + button_mode)
 
-btns = Buttons(screen, [(12, btn1_cb), (14, btn2_cb)])
+btns = Buttons([(12, btn1_cb), (14, btn2_cb)])
 screen.softbtn(["Pattern", "Speed"])
 screen.print("I am " + config["mode"])
 if (config["mode"] == "leader"):
