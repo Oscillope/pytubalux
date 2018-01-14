@@ -23,7 +23,11 @@ if (prog.value() == 0):
     sleep(1)
     import sys
     sys.exit()
-leds = Led(screen, config["num_leds"], config["led_pin"])
+try:
+    rings = config["rings"]
+except KeyError:
+    rings = None
+leds = Led(screen, config["num_leds"], config["led_pin"], rings if rings else None)
 menu_timer = machine.Timer(1)
 button_mode = "pat/tempo"
 last_mode = "pat/tempo"

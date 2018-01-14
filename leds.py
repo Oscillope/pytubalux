@@ -4,7 +4,7 @@ from utime import sleep
 import _thread
 
 class Led:
-    def __init__(self, scr, num, pin):
+    def __init__(self, scr, num, pin, rings=None):
         self.screen = scr
         self.screen.print("{:d} leds, pin {:d}".format(num, pin))
         self.leds = neopixel.NeoPixel(machine.Pin(pin), num)
@@ -20,6 +20,15 @@ class Led:
             "solid": self.pat_solid,
             "pulse": self.pat_pulse
         }
+        if (rings):
+            ring_pats = {
+                "r_radar": self.pat_radar,
+                "r_tunnel": self.pat_tunnel,
+            }
+            self.rings = rings
+            self._patterns.update(ring_pats)
+        else:
+            self.rings = None
         self.hue = 0
         self._colors = OrderedDict([
             ("red", 0),
@@ -196,3 +205,20 @@ class Led:
                 self.leds[self.leds.n - i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (i + pos))))
         self.leds.write()
 
+    def pat_radar(self, pos):
+        self.leds.fill((0, 0, 0))
+        for j, len in enumerate(self.rings):
+            offset = sum(self.rings[:j])
+            index = (pos % len) + offset
+            self.leds[index] = self.hsv2rgb(self.hue, 1, self.intens)
+        self.leds.write()
+
+    def pat_tunnel(self, pos):
+        if (self.pos >= len(self.rings)):
+            self.pos = 0
+        self.leds.fill((0, 0, 0))
+        ring = self.pos
+        offset = sum(self.rings[:ring])
+        for i in range(offset, offset + self.rings[ring]):
+            self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
+        self.leds.write()
