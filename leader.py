@@ -27,8 +27,9 @@ class Leader:
                 self.leds.active_pat = self.leds.patterns[pat]
                 if (self.clients[srcaddr]):
                     self.clients[srcaddr].send("/tubalux/pattern", pat + 1)
-            for client in self.clients:
-                client.send(msg)
+            for client in list(self.clients.values()):
+                if (client.dest[0] != srcaddr):
+                    client.send(addr, (tag, value))
         elif ("ping" in addr):
             if (srcaddr not in list(self.clients.keys())):
                 self.screen.print("sta " + srcaddr)
