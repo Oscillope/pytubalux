@@ -27,6 +27,10 @@ class Leader:
                 self.leds.active_pat = self.leds.patterns[pat]
                 if (self.clients[srcaddr]):
                     self.clients[srcaddr].send("/tubalux/pattern", pat + 1)
+            elif ("oneshot" in addr):
+                os = int(value)
+                print("run oneshot " + str(os))
+                self.leds.do_oneshot(self.leds.oneshots[os])
             for client in list(self.clients.values()):
                 if (client.dest[0] != srcaddr):
                     client.send(addr, (tag, value))
@@ -36,6 +40,8 @@ class Leader:
                 self.clients[srcaddr] = uosc.client.Client(srcaddr, 9009)
             for i, pattern in enumerate(self.leds.patterns):
                 self.clients[srcaddr].send("/tubalux/patterns/{:d}".format(i), pattern)
+            for i, oneshot in enumerate(self.leds.oneshots):
+                self.clients[srcaddr].send("/tubalux/oneshots/{:d}".format(i), oneshot)
             self.clients[srcaddr].send("/tubalux/intens", self.leds.intens)
             self.clients[srcaddr].send("/tubalux/color", self.leds.hue / 360)
 

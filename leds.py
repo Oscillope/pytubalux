@@ -20,6 +20,11 @@ class Led:
             ("solid", self.pat_solid),
             ("pulse", self.pat_pulse)
         ])
+        self._oneshots = OrderedDict([
+            ("bump", self.one_bump),
+            ("whoosh", self.one_whoosh),
+            ("rgb", self.one_rgb),
+        ])
         if (rings):
             ring_pats = OrderedDict([
                 ("r_radar", self.pat_radar),
@@ -41,7 +46,7 @@ class Led:
         ])
         self.intens = 0.2   # 0-1, float
         self._active = self.pat_rainbow
-        self.period = 20    # 10ths of a second
+        self.period = 0.2   # seconds
         self.stop_thread = False
         _thread.start_new_thread(self.led_timer_thread, (None,))
 
@@ -49,7 +54,7 @@ class Led:
         while (not self.stop_thread):
             self.pos = (self.pos + 1) % self.leds.n
             self._active()
-            sleep(self.period / 100)
+            sleep(self.period)
 
     def led_timer_stop(self):
         self.stop_thread = True
@@ -106,6 +111,10 @@ class Led:
         return list(self._patterns.keys())
 
     @property
+    def oneshots(self):
+        return list(self._oneshots.keys())
+
+    @property
     def colors(self):
         return list(self._colors.keys())
 
@@ -140,7 +149,13 @@ class Led:
     @tempo.setter
     def tempo(self, tempo):
         self.screen.print("Tempo: {:d}".format(tempo))
-        self.period = int(tempo/2)
+        self.period = tempo/100
+        self.led_timer_start()
+
+    def do_oneshot(self, name):
+        self.led_timer_stop()
+        self.screen.print("OneShot " + name)
+        self._oneshots[name]()
         self.led_timer_start()
 
     def pat_rainbow(self):
@@ -227,3 +242,41 @@ class Led:
         for i in range(offset, offset + self.rings[ring]):
             self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
         self.leds.write()
+
+    def one_bump(self):
+        for i in range(0, 4):
+            self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
+            self.leds.write()
+            sleep(self.period)
+            self.leds.fill((0, 0, 0))
+            self.leds.write()
+            sleep(self.period)
+
+    def one_whoosh(self):
+        for i in range(0, self.leds.n):
+            self.leds.fill((0, 0, 0))
+            self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
+            if (i - 1 > 0):
+                self.leds[i - 1] = self.hsv2rgb(self.hue, 1, self.intens)
+            if (i - 2 > 0):
+                self.leds[i - 2] = self.hsv2rgb(self.hue, 1, self.intens)
+            if (i - 3 > 0):
+                self.leds[i - 3] = self.hsv2rgb(self.hue, 1, self.intens)
+            if (i - 4 > 0):
+                self.leds[i - 4] = self.hsv2rgb(self.hue, 1, self.intens)
+            self.leds.write()
+            sleep(0.2)
+
+    def one_rgb(self):
+        self.leds.fill((0, 0, 0))
+        self.leds.write()
+        sleep(self.period)
+        self.leds.fill((255, 0, 0))
+        self.leds.write()
+        sleep(self.period)
+        self.leds.fill((0, 255, 0))
+        self.leds.write()
+        sleep(self.period)
+        self.leds.fill((0, 0, 255))
+        self.leds.write()
+        sleep(self.period)
