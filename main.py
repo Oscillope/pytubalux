@@ -164,7 +164,7 @@ if (config["mode"] == "leader"):
     ap = Leader(screen, leds)
     _thread.start_new_thread(ap.start, (config["ssid"],))
 elif (config["mode"] == "member"):
-    sta = Member(screen)
+    sta = Member(screen, leds)
     while (sta.start(config["ssid"])):
         screen.print("Waiting...")
         sleep(5)
