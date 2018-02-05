@@ -20,19 +20,21 @@ class Member:
                 self.leds.hue = value * 360
             elif ("intens" in addr):
                 self.leds.intens = value
+            elif ("tempo" in addr):
+                self.leds.tempo = value
             elif ("pattern" in addr):
-                pat = int(value)
-                print("set pattern " + str(pat))
-                self.leds.active_pat = self.leds.patterns[pat]
-                if (self.clients[srcaddr]):
-                    self.clients[srcaddr].send("/tubalux/pattern", pat + 1)
+                if tag in 'if':
+                    pat = int(value)
+                    print("set pattern " + str(pat))
+                    self.leds.active_pat = self.leds.patterns[pat]
+                elif tag == 's':
+                    self.leds.active_pat = value
+                else:
+                    print("Invalid pat type " + tag)
             elif ("oneshot" in addr):
                 os = int(value)
                 print("run oneshot " + str(os))
                 self.leds.do_oneshot(self.leds.oneshots[os])
-            for client in list(self.clients.values()):
-                if (client.dest[0] != srcaddr):
-                    client.send(addr, (tag, value))
 
     def osc_listen(self, addr):
         uosc.server.run_server(addr, 9009, callback=self.osc_callback)

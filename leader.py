@@ -17,10 +17,15 @@ class Leader:
         srcaddr = src[0]
         if ("tubalux" in addr):
             value = ctrls[0]
+            for client in list(self.clients.values()):
+                if (client.dest[0] != srcaddr):
+                    client.send(addr, (tag, value))
             if ("color" in addr):
                 self.leds.hue = value * 360
             elif ("intens" in addr):
                 self.leds.intens = value
+            elif ("tempo" in addr):
+                self.leds.tempo = value
             elif ("pattern" in addr):
                 pat = int(value)
                 print("set pattern " + str(pat))
@@ -31,9 +36,6 @@ class Leader:
                 os = int(value)
                 print("run oneshot " + str(os))
                 self.leds.do_oneshot(self.leds.oneshots[os])
-            for client in list(self.clients.values()):
-                if (client.dest[0] != srcaddr):
-                    client.send(addr, (tag, value))
         elif ("ping" in addr):
             if (srcaddr not in list(self.clients.keys())):
                 self.screen.print("sta " + srcaddr)
@@ -44,6 +46,7 @@ class Leader:
                 self.clients[srcaddr].send("/tubalux/oneshots/{:d}".format(i), oneshot)
             self.clients[srcaddr].send("/tubalux/intens", self.leds.intens)
             self.clients[srcaddr].send("/tubalux/color", self.leds.hue / 360)
+            self.clients[srcaddr].send("/tubalux/pattern", self.leds.active_pat)
 
     def start(self, ssid):
         self.ap_if.active(True)
