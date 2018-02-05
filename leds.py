@@ -132,7 +132,7 @@ class Led:
     @property
     def active_pat(self):
         try:
-            return next(key for key, self._active in self._patterns.items())
+            return self.patterns[list(self._patterns.values()).index(self._active)]
         except StopIteration:
             raise ValueError
 
