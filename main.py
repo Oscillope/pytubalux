@@ -1,8 +1,7 @@
 from disp import Display
 from leds import Led
 from buttons import Buttons
-from leader import Leader
-from member import Member
+import osc_node
 from utime import sleep
 import machine
 import uio
@@ -33,6 +32,7 @@ button_mode = "pat/tempo"
 last_mode = "pat/tempo"
 tap_samples = []
 tap_count = 0
+node = None
 
 def menu_timeout(timer):
     global button_mode
@@ -161,11 +161,11 @@ btns = Buttons(screen, [(12, btn1_cb), (14, btn2_cb)])
 screen.softbtn(["Pattern", "Speed"])
 screen.print("I am " + config["mode"])
 if (config["mode"] == "leader"):
-    ap = Leader(screen, leds)
-    _thread.start_new_thread(ap.start, (config["ssid"],))
+    node = osc_node.Leader(screen, leds)
+    node.start(config["ssid"])
 elif (config["mode"] == "member"):
-    sta = Member(screen, leds)
-    while (sta.start(config["ssid"])):
+    node = osc_node.Member(screen, leds)
+    while (node.start(config["ssid"])):
         screen.print("Waiting...")
         sleep(5)
 elif (config["mode"] == "self"):
