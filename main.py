@@ -7,6 +7,8 @@ import machine
 import uio
 import ujson
 import _thread
+import micropython
+micropython.alloc_emergency_exception_buf(100)
 
 # Read conf
 conffile = uio.open("config", 'r')
@@ -33,8 +35,10 @@ last_mode = "pat/tempo"
 tap_samples = []
 tap_count = 0
 node = None
+process_menu = False
+process_tap = False
 
-def menu_timeout(timer):
+def menu_timeout():
     global button_mode
     screen.drawtext()
     if (prog.value() == 0):
@@ -44,22 +48,33 @@ def menu_timeout(timer):
         return
     if (last_mode == "pat/tempo"):
         leds.active_pat = screen.menu_str
+        node.notify("pattern", leds.active_pat)
     elif (last_mode == "color"):
         leds.color_str = screen.menu_str
+        node.notify("hue", leds.hue)
     elif (last_mode == "intens"):
         leds.intens = float(screen.menu_str) / 100
+        node.notify("intens", leds.intens)
     screen.softbtn(["Pattern", "Tempo"])
     button_mode = "pat/tempo"
+
+def menu_isr(timer):
+    global process_menu
+    process_menu = True
 
 def tap_timeout():
     global button_mode
     global tap_samples
     avg = 0
+    screen.clearpopup()
     for samp in tap_samples:
         avg = avg + samp
-    avg = avg / len(tap_samples)
-    screen.clearpopup()
-    leds.tempo = int(avg)
+    try:
+        avg = avg / len(tap_samples)
+        leds.tempo = avg / 100
+    except ZeroDivisionError:
+        pass # If the user doesn't press the button before the timeout
+    node.notify("tempo", leds.tempo)
     screen.softbtn(["Pattern", "Tempo"])
     button_mode = "pat/tempo"
     leds.led_timer_start()
@@ -69,23 +84,36 @@ def tap_thread(timer):
     if (tap_count < 200):
         tap_count = tap_count + 1
     else:
+        global process_tap
         menu_timer.deinit()
         tap_count = 0
-        tap_timeout()
+        process_tap = True
+
+def menu_thread(unused):
+    global process_menu
+    global process_tap
+    print("Started menu thread")
+    while True:
+        if (process_menu):
+            process_menu = False
+            menu_timeout()
+        if (process_tap):
+            process_tap = False
+            tap_timeout()
 
 def softkey_up():
     try:
         screen.menu_pos -= 1
     except ValueError:
         pass
-    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
+    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_isr)
 
 def softkey_down():
     try:
         screen.menu_pos += 1
     except ValueError:
         pass
-    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
+    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_isr)
 
 def softkey_pattern():
     global button_mode
@@ -94,7 +122,7 @@ def softkey_pattern():
     screen.menu(leds.patterns, 0)
     screen.softbtn(["Up", "Down"])
     button_mode = "up/down"
-    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
+    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_isr)
 
 def softkey_tap():
     global tap_samples
@@ -124,7 +152,7 @@ def softkey_color():
     screen.menu(leds.colors, 0)
     screen.softbtn(["Up", "Down"])
     button_mode = "up/down"
-    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
+    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_isr)
 
 def softkey_intens():
     global button_mode
@@ -133,7 +161,7 @@ def softkey_intens():
     screen.menu(["100", "50", "20", "10"], 0)
     screen.softbtn(["Up", "Down"])
     button_mode = "up/down"
-    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_timeout)
+    menu_timer.init(period=2000, mode=machine.Timer.ONE_SHOT, callback=menu_isr)
 
 def softkey_none():
     pass
@@ -160,6 +188,7 @@ def btn2_cb():
 btns = Buttons(screen, [(12, btn1_cb), (14, btn2_cb)])
 screen.softbtn(["Pattern", "Speed"])
 screen.print("I am " + config["mode"])
+_thread.start_new_thread(menu_thread, (None,))
 if (config["mode"] == "leader"):
     node = osc_node.Leader(screen, leds)
     node.start(config["ssid"])

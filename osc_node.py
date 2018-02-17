@@ -18,6 +18,8 @@ class OscNode:
             value = ctrls[0]
             if ("color" in addr):
                 self.leds.hue = value * 360
+            elif ("hue" in addr):
+                self.leds.hue = value
             elif ("intens" in addr):
                 self.leds.intens = value
             elif ("tempo" in addr):
@@ -35,6 +37,9 @@ class OscNode:
                 os = int(value)
                 print("run oneshot " + str(os))
                 self.leds.do_oneshot(self.leds.oneshots[os])
+
+    def notify(self, event, value):
+        print("*** " + event + ": " + str(value))
 
     def osc_listen(self, host):
         addr, port = host
@@ -66,9 +71,15 @@ class Leader(OscNode):
             for i, oneshot in enumerate(self.leds.oneshots):
                 self.clients[srcaddr].send("/tubalux/oneshots/{:d}".format(i), oneshot)
             self.clients[srcaddr].send("/tubalux/intens", self.leds.intens)
-            self.clients[srcaddr].send("/tubalux/color", self.leds.hue / 360)
+            self.clients[srcaddr].send("/tubalux/hue", self.leds.hue)
             self.clients[srcaddr].send("/tubalux/pattern", self.leds.active_pat)
         OscNode.osc_callback(self, time, msg)
+
+    def notify(self, event, value):
+        OscNode.notify(self, event, value)
+        for client in list(self.clients.values()):
+            print("send to" + str(client))
+            client.send("/tubalux/" + event, value)
 
     def start(self, ssid):
         self.ap_if.active(True)
@@ -81,6 +92,12 @@ class Leader(OscNode):
         self.start_listen((addr, 9000))
 
 class Member(OscNode):
+    def notify(self, event, value):
+        OscNode.notify(self, event, value)
+        addr = "/tubalux/" + event
+        print(addr)
+        uosc.client.send(('10.11.10.1', 9000), addr, value)
+
     def start(self, ssid):
         sta_if = network.WLAN(network.STA_IF)
         sta_if.active(True)

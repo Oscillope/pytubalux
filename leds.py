@@ -1,6 +1,7 @@
 import machine, neopixel, math
 from ucollections import OrderedDict
 from utime import sleep
+import gc
 import _thread
 
 class Led:
@@ -62,6 +63,7 @@ class Led:
     def led_timer_start(self):
         if (self.stop_thread):
             self.stop_thread = False
+            gc.collect()
             _thread.start_new_thread(self.led_timer_thread, (None,))
 
     # RGB/HSV stuff from http://code.activestate.com/recipes/576919-python-rgb-and-hsv-conversion/
@@ -148,8 +150,8 @@ class Led:
 
     @tempo.setter
     def tempo(self, tempo):
-        self.screen.print("Tempo: {:d}".format(tempo))
-        self.period = tempo/100
+        self.screen.print("Tempo: {:f}".format(tempo))
+        self.period = tempo
         self.led_timer_start()
 
     def do_oneshot(self, name):
