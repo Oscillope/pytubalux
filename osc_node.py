@@ -78,7 +78,6 @@ class Leader(OscNode):
     def notify(self, event, value):
         OscNode.notify(self, event, value)
         for client in list(self.clients.values()):
-            print("send to" + str(client))
             client.send("/tubalux/" + event, value)
 
     def start(self, ssid):
