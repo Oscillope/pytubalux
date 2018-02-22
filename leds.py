@@ -65,8 +65,6 @@ class Led:
     def led_timer_start(self):
         if (self.stop_thread):
             self.stop_thread = False
-            gc.collect()
-            _thread.start_new_thread(self.led_timer_thread, (None,))
 
     # RGB/HSV stuff from http://code.activestate.com/recipes/576919-python-rgb-and-hsv-conversion/
     def hsv2rgb(self, h, s, v):
