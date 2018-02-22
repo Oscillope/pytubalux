@@ -1,6 +1,6 @@
 import machine, neopixel, math
 from ucollections import OrderedDict
-from utime import sleep
+from utime import sleep_ms
 import gc
 import _thread
 
@@ -47,15 +47,17 @@ class Led:
         ])
         self.intens = 0.2   # 0-1, float
         self._active = self.pat_rainbow
-        self.period = 0.2   # seconds
+        self.period = 200   # milliseconds
         self.stop_thread = False
         _thread.start_new_thread(self.led_timer_thread, (None,))
 
     def led_timer_thread(self, unused):
-        while (not self.stop_thread):
-            self.pos = (self.pos + 1) % self.leds.n
-            self._active()
-            sleep(self.period)
+        num = self.leds.n
+        while True:
+            if (not self.stop_thread):
+                self.pos = (self.pos + 1) % num
+                self._active()
+            sleep_ms(self.period)
 
     def led_timer_stop(self):
         self.stop_thread = True
@@ -144,16 +146,6 @@ class Led:
         self._active = self._patterns[name]
         self.led_timer_start()
 
-    @property
-    def tempo(self):
-        return self.period
-
-    @tempo.setter
-    def tempo(self, tempo):
-        self.screen.print("Tempo: {:f}".format(tempo))
-        self.period = tempo
-        self.led_timer_start()
-
     def do_oneshot(self, name):
         self.led_timer_stop()
         self.screen.print("OneShot " + name)
@@ -186,9 +178,10 @@ class Led:
     def pat_marquee(self):
         pos = self.pos
         num = self.leds.n
+        hue = self.hsv2rgb(self.hue, 1, self.intens)
         for i in range(0, num):
             if ((i + pos) % 4 == 0):
-                self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
+                self.leds[i] = hue
             else:
                 self.leds[i] = (0, 0, 0)
         self.leds.write()
@@ -249,10 +242,10 @@ class Led:
         for i in range(0, 4):
             self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
             self.leds.write()
-            sleep(self.period)
+            sleep_ms(self.period)
             self.leds.fill((0, 0, 0))
             self.leds.write()
-            sleep(self.period)
+            sleep_ms(self.period)
 
     def one_whoosh(self):
         for i in range(0, self.leds.n):
@@ -267,18 +260,18 @@ class Led:
             if (i - 4 > 0):
                 self.leds[i - 4] = self.hsv2rgb(self.hue, 1, self.intens)
             self.leds.write()
-            sleep(0.2)
+            sleep_ms(0.2)
 
     def one_rgb(self):
         self.leds.fill((0, 0, 0))
         self.leds.write()
-        sleep(self.period)
+        sleep_ms(self.period)
         self.leds.fill((255, 0, 0))
         self.leds.write()
-        sleep(self.period)
+        sleep_ms(self.period)
         self.leds.fill((0, 255, 0))
         self.leds.write()
-        sleep(self.period)
+        sleep_ms(self.period)
         self.leds.fill((0, 0, 255))
         self.leds.write()
-        sleep(self.period)
+        sleep_ms(self.period)

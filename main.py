@@ -71,10 +71,10 @@ def tap_timeout():
         avg = avg + samp
     try:
         avg = avg / len(tap_samples)
-        leds.tempo = avg / 100
+        leds.period = int(avg * 10)
     except ZeroDivisionError:
         pass # If the user doesn't press the button before the timeout
-    node.notify("tempo", leds.tempo)
+    node.notify("tempo", leds.period)
     screen.softbtn(["Pattern", "Tempo"])
     button_mode = "pat/tempo"
     leds.led_timer_start()
