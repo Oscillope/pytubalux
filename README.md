@@ -12,4 +12,9 @@ I picked MicroPython for this because it's pretty widely-supported, looked like 
 
 ## The Scripts
 There should be a file called `config` in the root directory of your MicroPython installation. It lists, in JSON format, the number of LEDs, controller mode, LED pin, and ESSID. See [config.example](https://github.com/Oscillope/tubalux/blob/master/config.example) for, well, an example...
+
+I've found that in general, it works best to compile the scripts into the micropython distribution as opposed to running them from the filesystem. To do this, you'll need to symlink all of the .py files including the uosc/ directory (except main.py) and put the links in `micropython/ports/esp32/modules` (you must clone the ![main micropython repo](https://github.com/micropython/micropython) first). Follow the instructions for the ![ESP32 port](https://github.com/micropython/micropython/blob/master/ports/esp32/README.md) to build and load it.
+
+If you don't feel like doing all that, you can just run `./deploy.sh <PORT>` with the serial port of your ESP32 (i.e. `/dev/ttyUSB0`), and it'll dump everything in the filesystem on your device. You can play around, but you may run into memory errors after a while.
+
 TODO: Document here the OSC syntax, and general project structure
