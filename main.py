@@ -10,14 +10,21 @@ import _thread
 import micropython
 micropython.alloc_emergency_exception_buf(100)
 
-# Read conf
-conffile = uio.open("config", 'r')
-config = ujson.loads(conffile.read())
-conffile.close()
-
 # Init objects
 screen = Display()
 screen.print("TubaLux(tm)")
+
+# Read conf
+try:
+    conffile = uio.open("config", 'r')
+    config = ujson.loads(conffile.read())
+    conffile.close()
+except OSError:
+    screen.print("No conf file")
+    sleep(1)
+    import sys
+    sys.exit()
+
 prog = machine.Pin(12, machine.Pin.IN, machine.Pin.PULL_UP)
 if (prog.value() == 0):
     screen.print("Programming mode")
