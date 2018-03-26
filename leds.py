@@ -1,6 +1,7 @@
 import machine, neopixel, math
 from ucollections import OrderedDict
 from utime import sleep_ms
+from audio import Audio
 import gc
 import _thread
 
@@ -11,6 +12,9 @@ class Led:
         self.leds = neopixel.NeoPixel(machine.Pin(pin), num)
         self.leds.fill((0, 0, 0))
         self.leds.write()
+        #self.mic = Audio(scr, self.led_isr)
+        micpin = machine.Pin(34, machine.Pin.IN, machine.Pin.PULL_DOWN)
+        irq = micpin.irq(trigger=machine.Pin.IRQ_RISING, handler=self.led_isr)
         self.reverse = False
         self.pos = 0
         self._patterns = OrderedDict([
@@ -19,7 +23,8 @@ class Led:
             ("rainbow cylon", self.pat_rainbowcyl),
             ("marquee", self.pat_marquee),
             ("solid", self.pat_solid),
-            ("pulse", self.pat_pulse)
+            ("pulse", self.pat_pulse),
+            #("aud_rbow", self.aud_rbow)
         ])
         self._oneshots = OrderedDict([
             ("bump", self.one_bump),
@@ -50,6 +55,11 @@ class Led:
         self.period = 200   # milliseconds
         self.stop_thread = False
         _thread.start_new_thread(self.led_timer_thread, (None,))
+
+    def led_isr(self, pin):
+        #self.screen.print("isr")
+        self.leds.fill((0, 0, 0))
+        self.leds.write()
 
     def led_timer_thread(self, unused):
         num = self.leds.n
@@ -216,6 +226,17 @@ class Led:
         elif (pos < 8):
             for i in range(1, 9 - pos):
                 self.leds[self.leds.n - i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (i + pos))))
+        self.leds.write()
+
+    def aud_rbow(self):
+        pos = self.pos
+        num = self.leds.n
+        step = 360 / num
+        for i in range(0, num):
+            hue = self.mic.value % 360
+            rgb = self.hsv2rgb(hue, 1, self.intens)
+            #print("hue {:f} pos {:d} rgb ".format(hue, self.pos) + str(rgb))
+            self.leds[i] = rgb
         self.leds.write()
 
     def pat_radar(self):
