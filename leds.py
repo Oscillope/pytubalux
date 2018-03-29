@@ -11,8 +11,6 @@ class Led:
         self.leds = neopixel.NeoPixel(machine.Pin(pin), num)
         self.leds.fill((0, 0, 0))
         self.leds.write()
-        self.reverse = False
-        self.pos = 0
         self._patterns = OrderedDict([
             ("rainbow", self.pat_rainbow),
             ("cylon", self.pat_bounce),
@@ -54,9 +52,7 @@ class Led:
     def led_timer_thread(self, unused):
         num = self.leds.n
         while True:
-            if (not self.stop_thread):
-                self.pos = (self.pos + 1) % num
-                self._active()
+            self._active(num)
             sleep_ms(self.period)
 
     def led_timer_stop(self):
@@ -140,6 +136,7 @@ class Led:
 
     @active_pat.setter
     def active_pat(self, name):
+        self.led_timer_stop()
         self.screen.print("Selected " + name)
         self._active = self._patterns[name]
         self.led_timer_start()
@@ -150,91 +147,114 @@ class Led:
         self._oneshots[name]()
         self.led_timer_start()
 
-    def pat_rainbow(self):
-        pos = self.pos
-        num = self.leds.n
+    def pat_rainbow(self, num):
         step = 360 / num
-        for i in range(0, num):
-            hue = ((i + pos) * step) % 360
-            rgb = self.hsv2rgb(hue, 1, self.intens)
-            #print("hue {:f} pos {:d} rgb ".format(hue, self.pos) + str(rgb))
-            self.leds[i] = rgb
-        self.leds.write()
+        pos = 0
+        while (not self.stop_thread):
+            for i in range(0, num):
+                hue = ((i + pos) * step) % 360
+                rgb = self.hsv2rgb(hue, 1, self.intens)
+                #print("hue {:f} pos {:d} rgb ".format(hue, self.pos) + str(rgb))
+                self.leds[i] = rgb
+            self.leds.write()
+            pos = (pos + 1) % num
+            sleep_ms(self.period)
 
-    def pat_bounce(self):
-        pos = self.pos
-        if (self.reverse):
-            i = self.leds.n - pos - 1
-        else:
-            i = pos
-        self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
-        self.leds.write()
-        self.leds[i] = (0, 0, 0)
-        if (pos == (self.leds.n - 1)):
-            self.reverse = not self.reverse
-
-    def pat_marquee(self):
-        pos = self.pos
-        num = self.leds.n
-        hue = self.hsv2rgb(self.hue, 1, self.intens)
-        for i in range(0, num):
-            if ((i + pos) % 4 == 0):
-                self.leds[i] = hue
+    def pat_bounce(self, num):
+        pos = 0
+        reverse = 0
+        while (not self.stop_thread):
+            if (reverse):
+                i = num - pos - 1
             else:
-                self.leds[i] = (0, 0, 0)
-        self.leds.write()
+                i = pos
+            self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
+            self.leds.write()
+            self.leds[i] = (0, 0, 0)
+            if (pos == (num - 1)):
+                reverse = self.reverse
+            pos = (pos + 1) % num
+            sleep_ms(self.period / 4)
 
-    def pat_rainbowcyl(self):
-        pos = self.pos
-        if (self.reverse):
-            i = self.leds.n - pos - 1
-        else:
-            i = pos
-        step = 360 / self.leds.n
-        hue = (pos * step) % 360
-        self.leds[i] = self.hsv2rgb(hue, 1, self.intens)
-        self.leds.write()
-        self.leds[i] = (0, 0, 0)
-        if (pos == (self.leds.n - 1)):
-            self.reverse = not self.reverse
+    def pat_marquee(self, num):
+        pos = 0
+        hue = self.hsv2rgb(self.hue, 1, self.intens)
+        while (not self.stop_thread):
+            for i in range(0, num):
+                if ((i + pos) % 4 == 0):
+                    self.leds[i] = hue
+                else:
+                    self.leds[i] = (0, 0, 0)
+            self.leds.write()
+            pos = (pos + 1) % num
+            sleep_ms(self.period / 2)
+
+    def pat_rainbowcyl(self, num):
+        pos = 0
+        reverse = 0
+        step = 360 / num
+        while (not self.stop_thread):
+            if (reverse):
+                i = num - pos - 1
+            else:
+                i = pos
+            hue = (pos * step) % 360
+            self.leds[i] = self.hsv2rgb(hue, 1, self.intens)
+            self.leds.write()
+            self.leds[i] = (0, 0, 0)
+            if (pos == (num - 1)):
+                reverse = not reverse
+            pos = (pos + 1) % num
+            sleep_ms(self.period / 8)
 
     def pat_solid(self):
-        self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
-        self.leds.write()
-        self.led_timer_stop()
+        if (not self.stop_thread):
+            self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
+            self.leds.write()
+            self.led_timer_stop()
 
-    def pat_pulse(self):
-        pos = self.pos
-        if (pos == 0):
-            self.reverse = not self.reverse
-        self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
-        if (not self.reverse):
-            for i in range(pos - 8, pos):
-                if (i >= 0):
-                    self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (pos - i))))
-            self.leds[pos] = (0, 0, 0)
-        elif (pos < 8):
-            for i in range(1, 9 - pos):
-                self.leds[self.leds.n - i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (i + pos))))
-        self.leds.write()
+    # This might be broken now..... TEST ME
+    def pat_pulse(self, num):
+        pos = 0
+        pulsing = 0
+        while (not self.stop_thread):
+            if (pos == 0):
+                pulsing = not pulsing
+            self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
+            if (pulsing):
+                for i in range(pos - 8, pos):
+                    if (i >= 0):
+                        self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (pos - i))))
+                self.leds[pos] = (0, 0, 0)
+            elif (pos < 8):
+                for i in range(1, 9 - pos):
+                    self.leds[num - i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (i + pos))))
+            self.leds.write()
+            pos = (pos + 1) % num
+            sleep_ms(self.period / 4)
 
-    def pat_radar(self):
+    def pat_radar(self, num):
         self.leds.fill((0, 0, 0))
-        for j, len in enumerate(self.rings):
-            offset = sum(self.rings[:j])
-            index = (self.pos % len) + offset
-            self.leds[index] = self.hsv2rgb(self.hue, 1, self.intens)
-        self.leds.write()
+        pos = 0
+        while (not self.stop_thread):
+            for j, len in enumerate(self.rings):
+                offset = sum(self.rings[:j])
+                index = (pos % len) + offset
+                self.leds[index] = self.hsv2rgb(self.hue, 1, self.intens)
+            self.leds.write()
+            pos = (pos + 1) % num
+            sleep_ms(self.period / 4)
 
-    def pat_tunnel(self):
-        if (self.pos >= len(self.rings)):
-            self.pos = 0
+    def pat_tunnel(self, num):
+        ring = 0
         self.leds.fill((0, 0, 0))
-        ring = self.pos
-        offset = sum(self.rings[:ring])
-        for i in range(offset, offset + self.rings[ring]):
-            self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
-        self.leds.write()
+        while (not self.stop_thread):
+            offset = sum(self.rings[:ring])
+            for i in range(offset, offset + self.rings[ring]):
+                self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
+            self.leds.write()
+            ring = (ring + 1) % len(self.rings)
+            sleep_ms(self.period)
 
     def one_bump(self):
         for i in range(0, 4):
