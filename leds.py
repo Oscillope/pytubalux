@@ -17,7 +17,8 @@ class Led:
             ("rainbow cylon", self.pat_rainbowcyl),
             ("marquee", self.pat_marquee),
             ("solid", self.pat_solid),
-            ("pulse", self.pat_pulse)
+            ("pulse", self.pat_pulse),
+            ("rgb party", self.pat_rgb_party),
         ])
         self._oneshots = OrderedDict([
             ("bump", self.one_bump),
@@ -255,6 +256,17 @@ class Led:
             self.leds.write()
             ring = (ring + 1) % len(self.rings)
             sleep_ms(self.period)
+
+    def pat_rgb_party(self, num):
+        pos = 0
+        cycle = 0
+        while (not self.stop_thread):
+            self.leds[pos] = self.hsb2rgb(cycle * 90, 1, self.intens)
+            self.leds.write()
+            pos = (pos + 1) % num
+            if (pos == 0):
+                cycle = (cycle + 1) % 3
+            sleep_ms(self.period / 32)
 
     def one_bump(self):
         for i in range(0, 4):
