@@ -277,13 +277,14 @@ class Led:
             sleep(time)
 
     def one_bump(self):
+        time = self.period / 4
         for i in range(0, 4):
             self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
             self.leds.write()
-            sleep(self.period)
+            sleep(time)
             self.leds.fill((0, 0, 0))
             self.leds.write()
-            sleep(self.period)
+            sleep(time)
 
     def one_whoosh(self):
         for i in range(0, self.leds.n):
@@ -298,18 +299,19 @@ class Led:
             if (i - 4 > 0):
                 self.leds[i - 4] = self.hsv2rgb(self.hue, 1, self.intens)
             self.leds.write()
-            sleep(0.2)
+            sleep(0.015)
 
     def one_rgb(self):
+        time = self.period / 2
         self.leds.fill((0, 0, 0))
         self.leds.write()
-        sleep(self.period)
+        sleep(time)
         self.leds.fill((255, 0, 0))
         self.leds.write()
-        sleep(self.period)
+        sleep(time)
         self.leds.fill((0, 255, 0))
         self.leds.write()
-        sleep(self.period)
+        sleep(time)
         self.leds.fill((0, 0, 255))
         self.leds.write()
-        sleep(self.period)
+        sleep(time)
