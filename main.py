@@ -78,7 +78,7 @@ def tap_timeout():
         avg = avg + samp
     try:
         avg = avg / len(tap_samples)
-        leds.period = int(avg * 10)
+        leds.period = int(avg * 10) / 1000
     except ZeroDivisionError:
         pass # If the user doesn't press the button before the timeout
     node.notify("tempo", leds.period)

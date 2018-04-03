@@ -1,6 +1,6 @@
 import machine, neopixel, math
 from ucollections import OrderedDict
-from utime import sleep_ms
+from utime import sleep
 import gc
 import _thread
 
@@ -46,7 +46,7 @@ class Led:
         ])
         self.intens = 0.2   # 0-1, float
         self._active = self.pat_rainbow
-        self.period = 200   # milliseconds
+        self.period = 0.2   # seconds
         self.stop_thread = False
         _thread.start_new_thread(self.led_timer_thread, (None,))
 
@@ -54,13 +54,14 @@ class Led:
         num = self.leds.n
         while True:
             self._active(num)
-            sleep_ms(self.period)
+            sleep(self.period)
 
     def led_timer_stop(self):
         self.stop_thread = True
 
     def led_timer_start(self):
         if (self.stop_thread):
+            sleep(self.period + 0.01)
             self.stop_thread = False
 
     # RGB/HSV stuff from http://code.activestate.com/recipes/576919-python-rgb-and-hsv-conversion/
@@ -151,6 +152,7 @@ class Led:
     def pat_rainbow(self, num):
         step = 360 / num
         pos = 0
+        time = self.period
         while (not self.stop_thread):
             for i in range(0, num):
                 hue = ((i + pos) * step) % 360
@@ -159,11 +161,12 @@ class Led:
                 self.leds[i] = rgb
             self.leds.write()
             pos = (pos + 1) % num
-            sleep_ms(self.period)
+            sleep(time)
 
     def pat_bounce(self, num):
         pos = 0
         reverse = 0
+        time = self.period / 4
         while (not self.stop_thread):
             if (reverse):
                 i = num - pos - 1
@@ -173,13 +176,14 @@ class Led:
             self.leds.write()
             self.leds[i] = (0, 0, 0)
             if (pos == (num - 1)):
-                reverse = self.reverse
+                reverse = not reverse
             pos = (pos + 1) % num
-            sleep_ms(self.period / 4)
+            sleep(time)
 
     def pat_marquee(self, num):
         pos = 0
         hue = self.hsv2rgb(self.hue, 1, self.intens)
+        time = self.period / 2
         while (not self.stop_thread):
             for i in range(0, num):
                 if ((i + pos) % 4 == 0):
@@ -188,12 +192,13 @@ class Led:
                     self.leds[i] = (0, 0, 0)
             self.leds.write()
             pos = (pos + 1) % num
-            sleep_ms(self.period / 2)
+            sleep(time)
 
     def pat_rainbowcyl(self, num):
         pos = 0
         reverse = 0
         step = 360 / num
+        time = self.period / 8
         while (not self.stop_thread):
             if (reverse):
                 i = num - pos - 1
@@ -206,18 +211,18 @@ class Led:
             if (pos == (num - 1)):
                 reverse = not reverse
             pos = (pos + 1) % num
-            sleep_ms(self.period / 8)
+            sleep(time)
 
-    def pat_solid(self):
+    def pat_solid(self, num):
         if (not self.stop_thread):
             self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
             self.leds.write()
             self.led_timer_stop()
 
-    # This might be broken now..... TEST ME
     def pat_pulse(self, num):
         pos = 0
         pulsing = 0
+        time = self.period / 4
         while (not self.stop_thread):
             if (pos == 0):
                 pulsing = not pulsing
@@ -232,11 +237,12 @@ class Led:
                     self.leds[num - i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (i + pos))))
             self.leds.write()
             pos = (pos + 1) % num
-            sleep_ms(self.period / 4)
+            sleep(time)
 
     def pat_radar(self, num):
         self.leds.fill((0, 0, 0))
         pos = 0
+        time = self.period / 4
         while (not self.stop_thread):
             for j, len in enumerate(self.rings):
                 offset = sum(self.rings[:j])
@@ -244,38 +250,40 @@ class Led:
                 self.leds[index] = self.hsv2rgb(self.hue, 1, self.intens)
             self.leds.write()
             pos = (pos + 1) % num
-            sleep_ms(self.period / 4)
+            sleep(time)
 
     def pat_tunnel(self, num):
         ring = 0
         self.leds.fill((0, 0, 0))
+        time = self.period
         while (not self.stop_thread):
             offset = sum(self.rings[:ring])
             for i in range(offset, offset + self.rings[ring]):
                 self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
             self.leds.write()
             ring = (ring + 1) % len(self.rings)
-            sleep_ms(self.period)
+            sleep(time)
 
     def pat_rgb_party(self, num):
         pos = 0
         cycle = 0
+        time = self.period / 16
         while (not self.stop_thread):
-            self.leds[pos] = self.hsb2rgb(cycle * 90, 1, self.intens)
+            self.leds[pos] = self.hsv2rgb(cycle * 90, 1, self.intens)
             self.leds.write()
             pos = (pos + 1) % num
             if (pos == 0):
                 cycle = (cycle + 1) % 3
-            sleep_ms(self.period / 32)
+            sleep(time)
 
     def one_bump(self):
         for i in range(0, 4):
             self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
             self.leds.write()
-            sleep_ms(self.period)
+            sleep(self.period)
             self.leds.fill((0, 0, 0))
             self.leds.write()
-            sleep_ms(self.period)
+            sleep(self.period)
 
     def one_whoosh(self):
         for i in range(0, self.leds.n):
@@ -290,18 +298,18 @@ class Led:
             if (i - 4 > 0):
                 self.leds[i - 4] = self.hsv2rgb(self.hue, 1, self.intens)
             self.leds.write()
-            sleep_ms(0.2)
+            sleep(0.2)
 
     def one_rgb(self):
         self.leds.fill((0, 0, 0))
         self.leds.write()
-        sleep_ms(self.period)
+        sleep(self.period)
         self.leds.fill((255, 0, 0))
         self.leds.write()
-        sleep_ms(self.period)
+        sleep(self.period)
         self.leds.fill((0, 255, 0))
         self.leds.write()
-        sleep_ms(self.period)
+        sleep(self.period)
         self.leds.fill((0, 0, 255))
         self.leds.write()
-        sleep_ms(self.period)
+        sleep(self.period)
