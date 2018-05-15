@@ -55,13 +55,16 @@ def menu_timeout():
         return
     if (last_mode == "pat/tempo"):
         leds.active_pat = screen.menu_str
-        node.notify("pattern", leds.active_pat)
+        if (node):
+            node.notify("pattern", leds.active_pat)
     elif (last_mode == "color"):
         leds.color_str = screen.menu_str
-        node.notify("hue", leds.hue)
+        if (node):
+            node.notify("hue", leds.hue)
     elif (last_mode == "intens"):
         leds.intens = float(screen.menu_str) / 100
-        node.notify("intens", leds.intens)
+        if (node):
+            node.notify("intens", leds.intens)
     screen.softbtn(["Pattern", "Tempo"])
     button_mode = "pat/tempo"
 
@@ -81,7 +84,8 @@ def tap_timeout():
         leds.period = int(avg * 10) / 1000
     except ZeroDivisionError:
         pass # If the user doesn't press the button before the timeout
-    node.notify("tempo", leds.period)
+    if (node):
+        node.notify("tempo", leds.period)
     screen.softbtn(["Pattern", "Tempo"])
     button_mode = "pat/tempo"
     leds.led_timer_start()
@@ -149,7 +153,6 @@ def softkey_tempo():
     screen.popup("Tap!")
     screen.softbtn(["", "Tap!"])
     button_mode = "tap"
-    #_thread.start_new_thread(tap_thread, (tap_samples,))
     menu_timer.init(period=10, mode=machine.Timer.PERIODIC, callback=tap_thread)
 
 def softkey_color():
