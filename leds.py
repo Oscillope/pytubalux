@@ -46,7 +46,7 @@ class Led:
         ])
         self.intens = 0.2   # 0-1, float
         self._active = self.pat_rainbow
-        self._period = 0.2   # seconds
+        self.period = 0.2   # seconds
         self.stop_thread = False
         self.pat_chg = False
         _thread.start_new_thread(self.led_timer_thread, (None,))
@@ -56,7 +56,7 @@ class Led:
         while True:
             if (not self.stop_thread):
                 self._active(num)
-            sleep(self._period)
+            sleep(self.period)
             self.pat_chg = False
 
     def led_timer_stop(self):
@@ -133,15 +133,6 @@ class Led:
         self.hue = self._colors[name]
 
     @property
-    def period(self):
-        return self._period
-
-    @period.setter
-    def period(self, value):
-        self._period = value
-        self.pat_chg = True
-
-    @property
     def active_pat(self):
         try:
             return self.patterns[list(self._patterns.values()).index(self._active)]
@@ -162,7 +153,6 @@ class Led:
     def pat_rainbow(self, num):
         step = 360 / num
         pos = 0
-        time = self._period
         while (not self.pat_chg):
             for i in range(0, num):
                 hue = ((i + pos) * step) % 360
@@ -171,12 +161,11 @@ class Led:
                 self.leds[i] = rgb
             self.leds.write()
             pos = (pos + 1) % num
-            sleep(time)
+            sleep(self.period)
 
     def pat_bounce(self, num):
         pos = 0
         reverse = 0
-        time = self._period / 4
         while (not self.pat_chg):
             if (reverse):
                 i = num - pos - 1
@@ -188,27 +177,24 @@ class Led:
             if (pos == (num - 1)):
                 reverse = not reverse
             pos = (pos + 1) % num
-            sleep(time)
+            sleep(self.period / 4)
 
     def pat_marquee(self, num):
         pos = 0
-        hue = self.hsv2rgb(self.hue, 1, self.intens)
-        time = self._period / 2
         while (not self.pat_chg):
             for i in range(0, num):
                 if ((i + pos) % 4 == 0):
-                    self.leds[i] = hue
+                    self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
                 else:
                     self.leds[i] = (0, 0, 0)
             self.leds.write()
             pos = (pos + 1) % num
-            sleep(time)
+            sleep(self.period / 2)
 
     def pat_rainbowcyl(self, num):
         pos = 0
         reverse = 0
         step = 360 / num
-        time = self._period / 8
         while (not self.pat_chg):
             if (reverse):
                 i = num - pos - 1
@@ -221,18 +207,16 @@ class Led:
             if (pos == (num - 1)):
                 reverse = not reverse
             pos = (pos + 1) % num
-            sleep(time)
+            sleep(self.period / 8)
 
     def pat_solid(self, num):
-        if (True):
-            self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
-            self.leds.write()
-            self.led_timer_stop()
+        self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
+        self.leds.write()
+        self.led_timer_stop()
 
     def pat_pulse(self, num):
         pos = 0
         pulsing = 0
-        time = self._period / 4
         while (not self.pat_chg):
             if (pos == 0):
                 pulsing = not pulsing
@@ -247,12 +231,11 @@ class Led:
                     self.leds[num - i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (i + pos))))
             self.leds.write()
             pos = (pos + 1) % num
-            sleep(time)
+            sleep(self.period / 4)
 
     def pat_radar(self, num):
         self.leds.fill((0, 0, 0))
         pos = 0
-        time = self._period / 4
         while (not self.pat_chg):
             self.leds.fill((0, 0, 0))
             for j, len in enumerate(self.rings):
@@ -261,12 +244,11 @@ class Led:
                 self.leds[index] = self.hsv2rgb(self.hue, 1, self.intens)
             self.leds.write()
             pos = (pos + 1) % num
-            sleep(time)
+            sleep(self.period / 4)
 
     def pat_tunnel(self, num):
         ring = 0
         self.leds.fill((0, 0, 0))
-        time = self._period
         while (not self.pat_chg):
             self.leds.fill((0, 0, 0))
             offset = sum(self.rings[:ring])
@@ -274,22 +256,21 @@ class Led:
                 self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
             self.leds.write()
             ring = (ring + 1) % len(self.rings)
-            sleep(time)
+            sleep(self.period)
 
     def pat_rgb_party(self, num):
         pos = 0
         cycle = 0
-        time = self._period / 16
         while (not self.pat_chg):
             self.leds[pos] = self.hsv2rgb(cycle * 90, 1, self.intens)
             self.leds.write()
             pos = (pos + 1) % num
             if (pos == 0):
                 cycle = (cycle + 1) % 3
-            sleep(time)
+            sleep(self.period / 16)
 
     def one_bump(self):
-        time = self._period / 4
+        time = self.period / 4
         for i in range(0, 4):
             self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
             self.leds.write()
@@ -314,7 +295,7 @@ class Led:
             sleep(0.015)
 
     def one_rgb(self):
-        time = self._period / 2
+        time = self.period / 2
         self.leds.fill((0, 0, 0))
         self.leds.write()
         sleep(time)
