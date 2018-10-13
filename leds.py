@@ -8,7 +8,7 @@ class Led:
     def __init__(self, scr, num, pin, rings=None):
         self.screen = scr
         self.screen.print("{:d} leds, pin {:d}".format(num, pin))
-        self.leds = neopixel.NeoPixel(machine.Pin(pin), num)
+        self.leds = neopixel.NeoPixel(machine.Pin(pin), num, timing=1)
         self.leds.fill((0, 0, 0))
         self.leds.write()
         self._patterns = OrderedDict([
