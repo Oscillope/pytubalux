@@ -3,6 +3,7 @@ from ucollections import OrderedDict
 from utime import sleep
 import gc
 import _thread
+import random
 
 class Led:
     def __init__(self, scr, num, pin, rings=None):
@@ -19,6 +20,7 @@ class Led:
             ("solid", self.pat_solid),
             ("pulse", self.pat_pulse),
             ("rgb party", self.pat_rgb_party),
+            ("flame", self.pat_flame)
         ])
         self._oneshots = OrderedDict([
             ("bump", self.one_bump),
@@ -147,8 +149,10 @@ class Led:
 
     def do_oneshot(self, name):
         self.screen.print("OneShot " + name)
-        self._oneshots[name]()
         self.pat_chg = True
+        self.stop_thread = True
+        self._oneshots[name]()
+        self.stop_thread = False
 
     def pat_rainbow(self, num):
         step = 360 / num
@@ -161,7 +165,7 @@ class Led:
                 self.leds[i] = rgb
             self.leds.write()
             pos = (pos + 1) % num
-            sleep(self.period)
+            #sleep(self.period)
 
     def pat_bounce(self, num):
         pos = 0
@@ -177,7 +181,7 @@ class Led:
             if (pos == (num - 1)):
                 reverse = not reverse
             pos = (pos + 1) % num
-            sleep(self.period / 4)
+            sleep(self.period / 8)
 
     def pat_marquee(self, num):
         pos = 0
@@ -231,7 +235,7 @@ class Led:
                     self.leds[num - i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (i + pos))))
             self.leds.write()
             pos = (pos + 1) % num
-            sleep(self.period / 4)
+            #sleep(self.period / 4)
 
     def pat_radar(self, num):
         self.leds.fill((0, 0, 0))
@@ -267,7 +271,29 @@ class Led:
             pos = (pos + 1) % num
             if (pos == 0):
                 cycle = (cycle + 1) % 3
-            sleep(self.period / 16)
+            #sleep(self.period / 16)
+
+    def pat_flame(self, num):
+        acolor = (0, 0, 0)
+        hmin = 0.1
+        hmax = 45.0
+        hdif = hmax-hmin;
+        ahue = hmin
+        self.leds.fill((0, 0, 0))
+        self.leds.write()
+        while (not self.pat_chg):
+            idelay = random.randint(0,10)
+            randtemp = random.randint(0,3)
+            hinc = (hdif/float(num))+randtemp
+            spread = random.randint(1, 5)
+            start = random.randint(0, num-spread)
+            for i in range(start, start + spread):
+                ahue = (ahue + hinc) % hmax
+                acolor = self.hsv2rgb(ahue, 1, self.intens)
+                self.leds[i] = acolor
+                self.leds[num - i - 1] = acolor
+                self.leds.write()
+                sleep(idelay/100.0);
 
     def one_bump(self):
         time = self.period / 4
@@ -280,19 +306,18 @@ class Led:
             sleep(time)
 
     def one_whoosh(self):
+        color = self.hsv2rgb(self.hue, 1, self.intens)
         for i in range(0, self.leds.n):
-            self.leds.fill((0, 0, 0))
-            self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
+            self.leds[i] = color
             if (i - 1 > 0):
-                self.leds[i - 1] = self.hsv2rgb(self.hue, 1, self.intens)
+                self.leds[i - 1] = color
             if (i - 2 > 0):
-                self.leds[i - 2] = self.hsv2rgb(self.hue, 1, self.intens)
+                self.leds[i - 2] = color
             if (i - 3 > 0):
-                self.leds[i - 3] = self.hsv2rgb(self.hue, 1, self.intens)
+                self.leds[i - 3] = color
             if (i - 4 > 0):
-                self.leds[i - 4] = self.hsv2rgb(self.hue, 1, self.intens)
+                self.leds[i - 4] = color
             self.leds.write()
-            sleep(0.015)
 
     def one_rgb(self):
         time = self.period / 2
