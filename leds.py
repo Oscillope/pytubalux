@@ -30,7 +30,8 @@ class Led:
         if (rings):
             ring_pats = OrderedDict([
                 ("r_radar", self.pat_radar),
-                ("r_tunnel", self.pat_tunnel)
+                ("r_tunnel", self.pat_tunnel),
+                ("r_bubbles", self.pat_bubbles)
             ])
             self.rings = rings
             self._patterns.update(ring_pats)
@@ -252,7 +253,6 @@ class Led:
 
     def pat_tunnel(self, num):
         ring = 0
-        self.leds.fill((0, 0, 0))
         while (not self.pat_chg):
             self.leds.fill((0, 0, 0))
             offset = sum(self.rings[:ring])
@@ -260,6 +260,19 @@ class Led:
                 self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
             self.leds.write()
             ring = (ring + 1) % len(self.rings)
+            sleep(self.period)
+
+    def pat_bubbles(self, num):
+        ring = 0
+        self.leds.fill((0, 0, 0))
+        while (not self.pat_chg):
+            self.leds.fill((0, 0, 0))
+            ring = random.randint(0, len(self.rings) - 1)
+            offset = sum(self.rings[:ring])
+            color = self.hsv2rgb(random.randint(0, 359), 1, self.intens)
+            for i in range(offset, offset + self.rings[ring]):
+                self.leds[i] = color
+            self.leds.write()
             sleep(self.period)
 
     def pat_rgb_party(self, num):
