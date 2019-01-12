@@ -73,6 +73,7 @@ class Leader(OscNode):
             self.clients[srcaddr].send("/tubalux/intens", self.leds.intens)
             self.clients[srcaddr].send("/tubalux/hue", self.leds.hue)
             self.clients[srcaddr].send("/tubalux/pattern", self.leds.active_pat)
+            self.clients[srcaddr].send("/tubalux/tempo", self.leds.period)
         OscNode.osc_callback(self, time, msg)
 
     def notify(self, event, value):
