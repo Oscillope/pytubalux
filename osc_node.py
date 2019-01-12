@@ -23,7 +23,7 @@ class OscNode:
             elif ("intens" in addr):
                 self.leds.intens = value
             elif ("tempo" in addr):
-                self.leds.tempo = value
+                self.leds.period = value
             elif ("pattern" in addr):
                 if tag in 'if':
                     pat = int(value)
