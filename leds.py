@@ -1,22 +1,21 @@
 import machine, neopixel, math
 from ucollections import OrderedDict
-from utime import sleep_ms
 from audio import Audio
+from utime import sleep
 import gc
 import _thread
+import random
 
 class Led:
     def __init__(self, scr, num, pin, rings=None):
         self.screen = scr
         self.screen.print("{:d} leds, pin {:d}".format(num, pin))
-        self.leds = neopixel.NeoPixel(machine.Pin(pin), num)
+        self.leds = neopixel.NeoPixel(machine.Pin(pin), num, timing=1)
         self.leds.fill((0, 0, 0))
         self.leds.write()
         #self.mic = Audio(scr, self.led_isr)
         micpin = machine.Pin(34, machine.Pin.IN, machine.Pin.PULL_DOWN)
         irq = micpin.irq(trigger=machine.Pin.IRQ_RISING, handler=self.led_isr)
-        self.reverse = False
-        self.pos = 0
         self._patterns = OrderedDict([
             ("rainbow", self.pat_rainbow),
             ("cylon", self.pat_bounce),
@@ -24,7 +23,9 @@ class Led:
             ("marquee", self.pat_marquee),
             ("solid", self.pat_solid),
             ("pulse", self.pat_pulse),
-            #("aud_rbow", self.aud_rbow)
+            ("aud_rbow", self.aud_rbow)
+            ("rgb party", self.pat_rgb_party),
+            ("flame", self.pat_flame)
         ])
         self._oneshots = OrderedDict([
             ("bump", self.one_bump),
@@ -34,7 +35,8 @@ class Led:
         if (rings):
             ring_pats = OrderedDict([
                 ("r_radar", self.pat_radar),
-                ("r_tunnel", self.pat_tunnel)
+                ("r_tunnel", self.pat_tunnel),
+                ("r_bubbles", self.pat_bubbles)
             ])
             self.rings = rings
             self._patterns.update(ring_pats)
@@ -52,8 +54,9 @@ class Led:
         ])
         self.intens = 0.2   # 0-1, float
         self._active = self.pat_rainbow
-        self.period = 200   # milliseconds
+        self.period = 0.2   # seconds
         self.stop_thread = False
+        self.pat_chg = False
         _thread.start_new_thread(self.led_timer_thread, (None,))
 
     def led_isr(self, pin):
@@ -65,12 +68,13 @@ class Led:
         num = self.leds.n
         while True:
             if (not self.stop_thread):
-                self.pos = (self.pos + 1) % num
-                self._active()
-            sleep_ms(self.period)
+                self._active(num)
+            sleep(self.period)
+            self.pat_chg = False
 
     def led_timer_stop(self):
         self.stop_thread = True
+        self.pat_chg = True
 
     def led_timer_start(self):
         if (self.stop_thread):
@@ -152,83 +156,99 @@ class Led:
     def active_pat(self, name):
         self.screen.print("Selected " + name)
         self._active = self._patterns[name]
-        self.led_timer_start()
+        self.pat_chg = True
 
     def do_oneshot(self, name):
-        self.led_timer_stop()
         self.screen.print("OneShot " + name)
+        self.pat_chg = True
+        self.stop_thread = True
         self._oneshots[name]()
-        self.led_timer_start()
+        self.stop_thread = False
 
-    def pat_rainbow(self):
-        pos = self.pos
-        num = self.leds.n
+    def pat_rainbow(self, num):
         step = 360 / num
-        for i in range(0, num):
-            hue = ((i + pos) * step) % 360
-            rgb = self.hsv2rgb(hue, 1, self.intens)
-            #print("hue {:f} pos {:d} rgb ".format(hue, self.pos) + str(rgb))
-            self.leds[i] = rgb
-        self.leds.write()
+        pos = 0
+        while (not self.pat_chg):
+            for i in range(0, num):
+                hue = ((i + pos) * step) % 360
+                rgb = self.hsv2rgb(hue, 1, self.intens)
+                #print("hue {:f} pos {:d} rgb ".format(hue, self.pos) + str(rgb))
+                self.leds[i] = rgb
+            self.leds.write()
+            pos = (pos + 1) % num
+            #sleep(self.period)
 
-    def pat_bounce(self):
-        pos = self.pos
-        if (self.reverse):
-            i = self.leds.n - pos - 1
-        else:
-            i = pos
-        self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
-        self.leds.write()
-        self.leds[i] = (0, 0, 0)
-        if (pos == (self.leds.n - 1)):
-            self.reverse = not self.reverse
-
-    def pat_marquee(self):
-        pos = self.pos
-        num = self.leds.n
-        hue = self.hsv2rgb(self.hue, 1, self.intens)
-        for i in range(0, num):
-            if ((i + pos) % 4 == 0):
-                self.leds[i] = hue
+    def pat_bounce(self, num):
+        pos = 0
+        reverse = 0
+        while (not self.pat_chg):
+            if (reverse):
+                i = num - pos - 1
             else:
-                self.leds[i] = (0, 0, 0)
-        self.leds.write()
+                i = pos
+            self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
+            self.leds.write()
+            self.leds[i] = (0, 0, 0)
+            if (pos == (num - 1)):
+                reverse = not reverse
+            pos = (pos + 1) % num
+            sleep(self.period / 8)
 
-    def pat_rainbowcyl(self):
-        pos = self.pos
-        if (self.reverse):
-            i = self.leds.n - pos - 1
-        else:
-            i = pos
-        step = 360 / self.leds.n
-        hue = (pos * step) % 360
-        self.leds[i] = self.hsv2rgb(hue, 1, self.intens)
-        self.leds.write()
-        self.leds[i] = (0, 0, 0)
-        if (pos == (self.leds.n - 1)):
-            self.reverse = not self.reverse
+    def pat_marquee(self, num):
+        pos = 0
+        while (not self.pat_chg):
+            for i in range(0, num):
+                if ((i + pos) % 4 == 0):
+                    self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
+                else:
+                    self.leds[i] = (0, 0, 0)
+            self.leds.write()
+            pos = (pos + 1) % num
+            sleep(self.period / 2)
 
-    def pat_solid(self):
+    def pat_rainbowcyl(self, num):
+        pos = 0
+        reverse = 0
+        step = 360 / num
+        while (not self.pat_chg):
+            if (reverse):
+                i = num - pos - 1
+            else:
+                i = pos
+            hue = (pos * step) % 360
+            self.leds[i] = self.hsv2rgb(hue, 1, self.intens)
+            self.leds.write()
+            self.leds[i] = (0, 0, 0)
+            if (pos == (num - 1)):
+                reverse = not reverse
+            pos = (pos + 1) % num
+            sleep(self.period / 8)
+
+    def pat_solid(self, num):
         self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
         self.leds.write()
         self.led_timer_stop()
 
-    def pat_pulse(self):
-        pos = self.pos
-        if (pos == 0):
-            self.reverse = not self.reverse
-        self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
-        if (not self.reverse):
-            for i in range(pos - 8, pos):
-                if (i >= 0):
-                    self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (pos - i))))
-            self.leds[pos] = (0, 0, 0)
-        elif (pos < 8):
-            for i in range(1, 9 - pos):
-                self.leds[self.leds.n - i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (i + pos))))
-        self.leds.write()
+    def pat_pulse(self, num):
+        pos = 0
+        pulsing = 0
+        while (not self.pat_chg):
+            if (pos == 0):
+                pulsing = not pulsing
+            self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
+            if (pulsing):
+                for i in range(pos - 8, pos):
+                    if (i >= 0):
+                        self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (pos - i))))
+                self.leds[pos] = (0, 0, 0)
+            elif (pos < 8):
+                for i in range(1, 9 - pos):
+                    self.leds[num - i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (i + pos))))
+            self.leds.write()
+            pos = (pos + 1) % num
+            #sleep(self.period / 4)
 
-    def aud_rbow(self):
+    def aud_rbow(self, num):
         pos = self.pos
         num = self.leds.n
         step = 360 / num
@@ -239,58 +259,111 @@ class Led:
             self.leds[i] = rgb
         self.leds.write()
 
-    def pat_radar(self):
+    def pat_radar(self, num):
         self.leds.fill((0, 0, 0))
-        for j, len in enumerate(self.rings):
-            offset = sum(self.rings[:j])
-            index = (self.pos % len) + offset
-            self.leds[index] = self.hsv2rgb(self.hue, 1, self.intens)
-        self.leds.write()
+        pos = 0
+        while (not self.pat_chg):
+            self.leds.fill((0, 0, 0))
+            for j, len in enumerate(self.rings):
+                offset = sum(self.rings[:j])
+                index = (pos % len) + offset
+                self.leds[index] = self.hsv2rgb(self.hue, 1, self.intens)
+            self.leds.write()
+            pos = (pos + 1) % num
+            sleep(self.period / 4)
 
-    def pat_tunnel(self):
-        if (self.pos >= len(self.rings)):
-            self.pos = 0
+    def pat_tunnel(self, num):
+        ring = 0
+        while (not self.pat_chg):
+            self.leds.fill((0, 0, 0))
+            offset = sum(self.rings[:ring])
+            for i in range(offset, offset + self.rings[ring]):
+                self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
+            self.leds.write()
+            ring = (ring + 1) % len(self.rings)
+            sleep(self.period)
+
+    def pat_bubbles(self, num):
+        ring = 0
         self.leds.fill((0, 0, 0))
-        ring = self.pos
-        offset = sum(self.rings[:ring])
-        for i in range(offset, offset + self.rings[ring]):
-            self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
+        while (not self.pat_chg):
+            self.leds.fill((0, 0, 0))
+            ring = random.randint(0, len(self.rings) - 1)
+            offset = sum(self.rings[:ring])
+            color = self.hsv2rgb(random.randint(0, 359), 1, self.intens)
+            for i in range(offset, offset + self.rings[ring]):
+                self.leds[i] = color
+            self.leds.write()
+            sleep(self.period)
+
+    def pat_rgb_party(self, num):
+        pos = 0
+        cycle = 0
+        while (not self.pat_chg):
+            self.leds[pos] = self.hsv2rgb(cycle * 90, 1, self.intens)
+            self.leds.write()
+            pos = (pos + 1) % num
+            if (pos == 0):
+                cycle = (cycle + 1) % 3
+            #sleep(self.period / 16)
+
+    def pat_flame(self, num):
+        acolor = (0, 0, 0)
+        hmin = 0.1
+        hmax = 45.0
+        hdif = hmax-hmin;
+        ahue = hmin
+        self.leds.fill((0, 0, 0))
         self.leds.write()
+        while (not self.pat_chg):
+            idelay = random.randint(0,10)
+            randtemp = random.randint(0,3)
+            hinc = (hdif/float(num))+randtemp
+            spread = random.randint(1, 5)
+            start = random.randint(0, num-spread)
+            for i in range(start, start + spread):
+                ahue = (ahue + hinc) % hmax
+                acolor = self.hsv2rgb(ahue, 1, self.intens)
+                self.leds[i] = acolor
+                self.leds[num - i - 1] = acolor
+                self.leds.write()
+                sleep(idelay/100.0);
 
     def one_bump(self):
+        time = self.period / 4
         for i in range(0, 4):
             self.leds.fill(self.hsv2rgb(self.hue, 1, self.intens))
             self.leds.write()
-            sleep_ms(self.period)
+            sleep(time)
             self.leds.fill((0, 0, 0))
             self.leds.write()
-            sleep_ms(self.period)
+            sleep(time)
 
     def one_whoosh(self):
+        color = self.hsv2rgb(self.hue, 1, self.intens)
         for i in range(0, self.leds.n):
-            self.leds.fill((0, 0, 0))
-            self.leds[i] = self.hsv2rgb(self.hue, 1, self.intens)
+            self.leds[i] = color
             if (i - 1 > 0):
-                self.leds[i - 1] = self.hsv2rgb(self.hue, 1, self.intens)
+                self.leds[i - 1] = color
             if (i - 2 > 0):
-                self.leds[i - 2] = self.hsv2rgb(self.hue, 1, self.intens)
+                self.leds[i - 2] = color
             if (i - 3 > 0):
-                self.leds[i - 3] = self.hsv2rgb(self.hue, 1, self.intens)
+                self.leds[i - 3] = color
             if (i - 4 > 0):
-                self.leds[i - 4] = self.hsv2rgb(self.hue, 1, self.intens)
+                self.leds[i - 4] = color
             self.leds.write()
-            sleep_ms(0.2)
 
     def one_rgb(self):
+        time = self.period / 2
         self.leds.fill((0, 0, 0))
         self.leds.write()
-        sleep_ms(self.period)
+        sleep(time)
         self.leds.fill((255, 0, 0))
         self.leds.write()
-        sleep_ms(self.period)
+        sleep(time)
         self.leds.fill((0, 255, 0))
         self.leds.write()
-        sleep_ms(self.period)
+        sleep(time)
         self.leds.fill((0, 0, 255))
         self.leds.write()
-        sleep_ms(self.period)
+        sleep(time)

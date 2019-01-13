@@ -23,7 +23,7 @@ class OscNode:
             elif ("intens" in addr):
                 self.leds.intens = value
             elif ("tempo" in addr):
-                self.leds.tempo = value
+                self.leds.period = value
             elif ("pattern" in addr):
                 if tag in 'if':
                     pat = int(value)
@@ -73,6 +73,7 @@ class Leader(OscNode):
             self.clients[srcaddr].send("/tubalux/intens", self.leds.intens)
             self.clients[srcaddr].send("/tubalux/hue", self.leds.hue)
             self.clients[srcaddr].send("/tubalux/pattern", self.leds.active_pat)
+            self.clients[srcaddr].send("/tubalux/tempo", self.leds.period)
         OscNode.osc_callback(self, time, msg)
 
     def notify(self, event, value):
