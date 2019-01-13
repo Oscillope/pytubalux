@@ -286,10 +286,12 @@ class Led:
                 cycle = (cycle + 1) % 3
             #sleep(self.period / 16)
 
+    # adapted from an arduino pattern at:
+    # http://www.funkboxing.com/wordpress/wp-content/_postfiles/fluxbox_octo.ino
     def pat_flame(self, num):
         acolor = (0, 0, 0)
         hmin = 0.1
-        hmax = 45.0
+        hmax = 40.0
         hdif = hmax-hmin;
         ahue = hmin
         self.leds.fill((0, 0, 0))
