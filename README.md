@@ -4,7 +4,7 @@ The Deluxe Brass Band Lighting System
 This is a ever-expanding lighting system, aimed at providing an inexpensive, flexible way for a band to roll out synchronized lighting effects. It is based on the ESP32, a handy little microcontroller that has a built-in wifi radio. It is written in MicroPython.
 
 ## The Hardware
-![ESP32 Pinout](https://ae01.alicdn.com/kf/HTB1tYN_SFXXXXa2XpXXq6xXFXXXl.jpg)
+![ESP32 Pinout](https://ae01.alicdn.com/kf/HTB1v1arsntYBeNjy1Xdq6xXyVXaD.jpg)
 This is the board. It can be purchased from [AliExpress](https://www.aliexpress.com/item/Lolin-ESP32-OLED-V2-0-Pro-ESP32-OLED-wemos-pour-Arduino-ESP32-OLED-WiFi-Modules-Bluetooth/32824819112.html) for around $10! You can also get a variety of different lengths of WS2812 LED strips. Pretty much all of them are compatible with this system.
 
 ## The Language
