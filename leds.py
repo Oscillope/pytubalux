@@ -9,7 +9,7 @@ class Led:
     def __init__(self, scr, num, pin, rings=None):
         self.screen = scr
         self.screen.print("{:d} leds, pin {:d}".format(num, pin))
-        self.leds = neopixel.NeoPixel(machine.Pin(pin), num, timing=1)
+        self.leds = neopixel.NeoPixel(machine.Pin(pin), num, timing=1, use_dma=True)
         self.leds.fill((0, 0, 0))
         self.leds.write()
         self._patterns = OrderedDict([
@@ -166,7 +166,7 @@ class Led:
                 self.leds[i] = rgb
             self.leds.write()
             pos = (pos + 1) % num
-            #sleep(self.period)
+            sleep(self.period)
 
     def pat_bounce(self, num):
         pos = 0
@@ -236,7 +236,7 @@ class Led:
                     self.leds[num - i] = self.hsv2rgb(self.hue, 1, self.intens / (2 ** (9 - (i + pos))))
             self.leds.write()
             pos = (pos + 1) % num
-            #sleep(self.period / 4)
+            sleep(self.period / 4)
 
     def pat_radar(self, num):
         self.leds.fill((0, 0, 0))
@@ -284,7 +284,7 @@ class Led:
             pos = (pos + 1) % num
             if (pos == 0):
                 cycle = (cycle + 1) % 3
-            #sleep(self.period / 16)
+            sleep(self.period / 16)
 
     # adapted from an arduino pattern at:
     # http://www.funkboxing.com/wordpress/wp-content/_postfiles/fluxbox_octo.ino
@@ -297,7 +297,7 @@ class Led:
         self.leds.fill((0, 0, 0))
         self.leds.write()
         while (not self.pat_chg):
-            idelay = random.randint(0,10)
+            idelay = random.randint(1,10)
             randtemp = random.randint(0,3)
             hinc = (hdif/float(num))+randtemp
             spread = random.randint(1, 5)
