@@ -20,7 +20,9 @@ class Led:
             ("solid", self.pat_solid),
             ("pulse", self.pat_pulse),
             ("rgb party", self.pat_rgb_party),
-            ("flame", self.pat_flame)
+            ("flame", self.pat_flame),
+            ("flame_g", self.pat_flame_g),
+            ("flame_b", self.pat_flame_b)
         ])
         self._oneshots = OrderedDict([
             ("bump", self.one_bump),
@@ -288,10 +290,8 @@ class Led:
 
     # adapted from an arduino pattern at:
     # http://www.funkboxing.com/wordpress/wp-content/_postfiles/fluxbox_octo.ino
-    def pat_flame(self, num):
+    def _pat_flame_internal(self, hmin, hmax, num):
         acolor = (0, 0, 0)
-        hmin = 0.1
-        hmax = 40.0
         hdif = hmax-hmin;
         ahue = hmin
         self.leds.fill((0, 0, 0))
@@ -303,12 +303,24 @@ class Led:
             spread = random.randint(1, 5)
             start = random.randint(0, num-spread)
             for i in range(start, start + spread):
-                ahue = (ahue + hinc) % hmax
+                if ((ahue + hinc) > hmax):
+                    ahue = hmin
+                else:
+                    ahue = ahue + hinc
                 acolor = self.hsv2rgb(ahue, 1, self.intens)
                 self.leds[i] = acolor
                 self.leds[num - i - 1] = acolor
                 self.leds.write()
                 sleep(idelay/100.0);
+
+    def pat_flame(self, num):
+        self._pat_flame_internal(0.1, 40.0, num)
+
+    def pat_flame_g(self, num):
+        self._pat_flame_internal(80.0, 160.0, num)
+
+    def pat_flame_b(self, num):
+        self._pat_flame_internal(180.0, 280.0, num)
 
     def one_bump(self):
         time = self.period / 4
