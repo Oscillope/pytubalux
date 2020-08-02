@@ -22,7 +22,8 @@ class Led:
             ("rgb party", self.pat_rgb_party),
             ("flame", self.pat_flame),
             ("flame_g", self.pat_flame_g),
-            ("flame_b", self.pat_flame_b)
+            ("flame_b", self.pat_flame_b),
+            ("flame_rb", self.pat_flame_rbow)
         ])
         self._oneshots = OrderedDict([
             ("bump", self.one_bump),
@@ -39,7 +40,7 @@ class Led:
             self._patterns.update(ring_pats)
         else:
             self.rings = None
-        self.hue = 0
+        self.hue = 240
         self._colors = OrderedDict([
             ("red", 0),
             ("orange", 30),
@@ -49,10 +50,10 @@ class Led:
             ("indigo", 260),
             ("violet", 280)
         ])
-        self.intens = 0.2   # 0-1, float
-        self._active = self.pat_rainbow
-        self.period = 0.2   # seconds
-        self.stop_thread = False
+        self.intens = 0.5   # 0-1, float
+        self._active = self.pat_flame_b
+        self.period = 0.2701   # seconds
+        self.stop_thread = True
         self.pat_chg = False
         _thread.start_new_thread(self.led_timer_thread, (None,))
 
@@ -297,10 +298,10 @@ class Led:
         self.leds.fill((0, 0, 0))
         self.leds.write()
         while (not self.pat_chg):
-            idelay = random.randint(1,10)
-            randtemp = random.randint(0,3)
+            idelay = random.randint(2,20)
+            randtemp = random.randint(3,9)
             hinc = (hdif/float(num))+randtemp
-            spread = random.randint(1, 5)
+            spread = random.randint(5, 40)
             start = random.randint(0, num-spread)
             for i in range(start, start + spread):
                 if ((ahue + hinc) > hmax):
@@ -320,7 +321,10 @@ class Led:
         self._pat_flame_internal(80.0, 160.0, num)
 
     def pat_flame_b(self, num):
-        self._pat_flame_internal(180.0, 280.0, num)
+        self._pat_flame_internal(170.0, 290.0, num)
+
+    def pat_flame_rbow(self, num):
+        self._pat_flame_internal(0.1, 360.0, num)
 
     def one_bump(self):
         time = self.period / 4

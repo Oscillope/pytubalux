@@ -111,6 +111,7 @@ def menu_thread(unused):
         if (process_tap):
             process_tap = False
             tap_timeout()
+        sleep(0.100);
 
 def softkey_up():
     try:
@@ -209,4 +210,4 @@ elif (config["mode"] == "member"):
         sleep(5)
 elif (config["mode"] == "self"):
     screen.print("Independent mode")
-
+leds.led_timer_start()
